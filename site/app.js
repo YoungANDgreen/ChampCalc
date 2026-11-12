@@ -42,7 +42,7 @@
     slug = meta.slug; drawTabs();
     if (!cache[slug]) view.innerHTML = '<p class="loading">Loading ' + meta.name + '…</p>';
     return load(slug).then(j => {
-      D = j; E = Engine.make({ n: D.teams.length, played: D.played, rem: D.rem.map(r => [r[0], r[1]]), pools: D.pools, spots: D.spots, ab: D.teams.map(t => t.ab) });
+      D = j; E = Engine.make({ slug: D.slug, n: D.teams.length, played: D.played, rem: D.rem.map(r => [r[0], r[1]]), pools: D.pools, spots: D.spots, ab: D.teams.map(t => t.ab), rate: D.rate, rank: D.rank, nc: D.nc });
       let i = D.teams.findIndex(t => t.id === String(teamId)); if (i < 0) i = D.teams.findIndex(t => t.id === meta.best); if (i < 0) i = 0;
       shell(); select(i, animate);
     }).catch(fail);
@@ -69,11 +69,7 @@
     <section id="s-guide"><h2>Rooting guide <small id="guide-sub"></small></h2>
       <div class="legend"><span class="t-ok"><i class="dot"></i>Title-game chance if the listed team wins</span><span class="t-bad"><i class="dot"></i>If it loses</span></div><div class="guide" id="guide"></div></section>
     <section><h2>${D.name} standings <small>Tap a row to switch schools</small></h2><div class="tbl"><table id="table"></table></div></section>
-    <section><details><summary>How ties are broken here</summary>
-      <ol type="A"><li><b>Head-to-head</b> among the tied teams. In a tie of three or more where not everyone played everyone, a team advances only by beating all the others and is dropped only by losing to all of them.</li>
-      <li><b>Record against common conference opponents.</b></li><li><b>Record against the highest-placed common opponent</b>, then the next one down the standings.</li>
-      <li><b>Combined conference winning percentage of each team's conference opponents.</b></li></ol>
-      <p style="margin:0 0 14px;color:var(--muted);font-size:14px">${D.slug === 'sec' ? 'These are the first four steps of the SEC procedure. Ties that survive them go to capped scoring margin and are counted separately, not as in or out.' : 'This is the SEC sequence, applied to every league so the math is comparable. The ' + D.name + ' follows the same opening steps, but its later steps differ, so close multi-team ties here are an approximation. Ties that survive all four steps are counted separately, not as in or out.'}${D.spots === 1 ? ' The ' + D.name + ' sends its two division winners to the title game, so each tie is broken inside a division.' : ''}</p></details></section>
+    <section><details><summary>How the ${D.name} breaks ties</summary>${rulesHTML()}</details></section>
     <section><div class="note" id="note"></div></section>`;
     $('picker').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) select(+b.dataset.t, true); });
     $('table').addEventListener('click', e => { const r = e.target.closest('tr.row'); if (r) select(+r.dataset.t, true); });
@@ -86,6 +82,17 @@
     $('chalk').onclick = () => { D.rem.forEach((g, i) => { picks[i] = g[3] >= 0.5 ? 1 : 0; }); drawGames(); evaluate(); };
     picks = D.rem.map(() => null);
   }
+  function rulesHTML() {
+    const r = E.rules, L = Engine.LABEL, long = { H2H: 'Head-to-head among the tied teams', H2H_B12: 'Head-to-head: record among the tied teams, or a team that beat all the others', H2H_WIN: 'Head-to-head: record among the tied teams, or a team that beat all the others', H2H_RR: 'Head-to-head, only if every tied team played every other', H2H_PCT: 'Winning percentage in games among the tied teams',
+      COMMON: 'Record against common conference opponents', WALK: 'Record against the highest-placed common opponent, then on down the standings', SOS: "Combined conference winning percentage of each team's conference opponents", WINS: 'Total regular-season wins',
+      CFP: 'Highest CFP committee ranking', RATING: r.rating, DIVPCT: 'Record inside the division', DIVWALK: 'Record against the next-highest finishers in the division', NONDIV: 'Record against common opponents from the other division' };
+    const est = { CFP: ' <i style="color:var(--warn);font-style:normal">Estimated with the current CFP ranking.</i>', RATING: ' <i style="color:var(--warn);font-style:normal">Not public, so estimated with ESPN FPI.</i>', WINS: ' <i style="color:var(--warn);font-style:normal">Unplayed non-conference games are given to the favorite.</i>' };
+    const ol = a => '<ol>' + a.map(x => `<li><b>${long[x] || L[x]}.</b>${est[x] || ''}</li>`).join('') + `<li><b>${r.stop ? r.stop.charAt(0).toUpperCase() + r.stop.slice(1) + ', then a draw' : 'Coin toss or draw'}.</b></li></ol>`;
+    const same = r.two.join() === r.multi.join();
+    return (same ? ol(r.two) : `<p style="margin:0 0 4px;color:var(--muted);font-size:14px">Two teams tied:</p>${ol(r.two)}<p style="margin:0 0 4px;color:var(--muted);font-size:14px">Three or more tied:</p>${ol(r.multi)}`) +
+      `<p style="margin:0 0 14px;color:var(--muted);font-size:14px">${r.note} ${r.mode === 'elim' ? 'When a step lifts one team clear, that team is in and the others start over. ' : ''}Source: ${r.src}. The league office has the final say.</p>`;
+  }
+  const estMode = () => D.und === 'est';
   const odds = i => { const s = D.stats[i]; return s.dead ? 'OUT' : (s.p === 0 && (s.rare || s.c || s.mc) ? '<0.01%' : pc(s.p)); };
   function drawPicker() {
     const order = D.teams.map((_, i) => i).sort((a, b) => D.stats[b].p - D.stats[a].p || D.teams[b].w - D.teams[a].w);
@@ -114,7 +121,7 @@
       ${tiles}<div class="yard" aria-hidden="true"></div>`;
     const head = gone ? 'Eliminated' : d.p >= 0.5 ? 'Favorite to get there' : d.p >= 0.1 ? 'Live contender' : d.p >= 0.01 ? 'Long shot, mathematically open' : 'Extremely low probability but mathematically open';
     $('note').innerHTML = `<h3>${head}</h3><p>${gone ? `No ${D.exact ? 'combination of results' : 'simulated season'} gets ${t.loc} to ${goal()}.` :
-      `${t.loc} reaches ${goal()} in ${D.exact ? fmt(d.c) + ' of ' + fmt(D.total) + ' remaining combinations (' + pc(d.c / D.total) + ')' : pc(d.c / D.total) + ' of coin-flip simulations'}${d.mc ? `, plus ${D.exact ? fmt(d.mc) : pc(d.mc / D.total)} that would come down to later tiebreakers` : ''}. Weighted by FPI win probabilities, that is a ${odds(i)} chance, which is the better estimate of real odds.`}</p>`;
+      `${t.loc} reaches ${goal()} in ${D.exact ? fmt(d.c) + ' of ' + fmt(D.total) + ' remaining combinations (' + pc(d.c / D.total) + ')' : pc(d.c / D.total) + ' of coin-flip simulations'}${d.mc ? (estMode() ? `. In ${pc(d.mc / Math.max(1, d.c))} of those, the deciding step is a rating or ranking that ChampCalc can only estimate` : `, plus ${D.exact ? fmt(d.mc) : pc(d.mc / D.total)} that would come down to ${E.rules.stop}`) : ''}. Weighted by FPI win probabilities, that is a ${odds(i)} chance, which is the better estimate of real odds.`}</p>`;
   }
   function drawPaths(i) {
     const d = D.stats[i], div = D.spots === 1 ? D.divNames[poolOf(i)] : null;
@@ -158,7 +165,7 @@
     const tone = B.i === 0 ? (B.m ? 'warn' : 'bad') : (B.i === B.t ? 'ok' : 'warn');
     return { tone, mark: k ? 'B' : 'A', title: (k ? 'Branch B · Exactly 1 team' : 'Branch A · 0 teams') + ` better than ${rec}${where}`, pill: tone === 'ok' ? 'Viable' : tone === 'bad' ? 'Eliminated' : 'Tiebreaker',
       sub: k ? `One team is locked in as the top seed. ${nm} needs to be the best of the teams at ${rec}.` : (S === 1 ? `${rec} is the best record in the division. ${nm} needs to win any tie at the top.` : `${rec} is the best record in the league. ${nm} needs to rank in the top two of the teams at ${rec}.`),
-      meter: meter(B.i, B.t, 'model ' + pc(B.ip)), detail: `<p>Results by how many teams finish ${rec}, counting ${nm}${B.m ? `. ${fmt(B.m)} more go to later tiebreakers` : ''}:</p>` + sizeRows(B, tone) };
+      meter: meter(B.i, B.t, 'model ' + pc(B.ip)), detail: `<p>Results by how many teams finish ${rec}, counting ${nm}${B.m ? (estMode() ? `. ${fmt(B.m)} of the winning ones rest on an estimated rating step` : `. ${fmt(B.m)} more go to ${E.rules.stop}`) : ''}:</p>` + sizeRows(B, tone) };
   }
   function drawTree(i) {
     const d = D.stats[i], R = d.rec, L = left(i), t = D.teams[i], mx = t.w + L.length, nm = t.loc;
@@ -199,14 +206,14 @@
     if (!und.length) {
       const log = []; E.apply(p); const r = E.title(log), st = stat(r), order = D.teams.map((_, k) => k).sort((a, b) => E.pct[b] - E.pct[a]).slice(0, 8); if (!order.includes(t)) order.push(t);
       tone(['bad', 'ok', 'warn'][st]);
-      V.innerHTML = `<h3>${[nm + ' is out', nm + ' is in', 'Down to later tiebreakers'][st]}</h3><p>${r.und.length ? 'A spot is still undecided after four steps.' : 'Title game: ' + r.sel.map(name).join(' vs ')}</p>
+      V.innerHTML = `<h3>${[nm + ' is out', nm + ' is in', 'Down to ' + (E.rules.stop || 'a draw')][st]}</h3><p>${r.und.length ? 'A spot is still undecided after the steps ChampCalc can compute.' : 'Title game: ' + r.sel.map(name).join(' vs ')}${r.est.length ? '. ' + list(r.est.map(name)) + ' got in on an estimated rating step' : ''}</p>
         ${log.length ? '<ol>' + log.map(l => '<li>' + l + '</li>').join('') + '</ol>' : '<p style="color:var(--muted)">No tiebreaker needed.</p>'}
         <div class="stand">${order.map(x => `<div class="${r.sel.includes(x) ? 'in' : ''} ${x === t ? 'me' : ''}"><span>${name(x)}</span><span class="num">${E.W[x]}-${E.G[x] - E.W[x]}</span></div>`).join('')}</div>`;
       return;
     }
     const show = (inn, mar, tot, pw, sampled) => { tone(pw > 0 ? (inn === tot ? 'ok' : 'warn') : (mar ? 'warn' : 'bad'));
-      V.innerHTML = `<h3>${pw > 0 ? pc(pw) + ' model chance' : (mar ? 'Later tiebreakers only' : nm + ' is out')}</h3>
-        <p class="num">${sampled ? `Estimated from ${fmt(tot)} simulations of the ${und.length} open games.` : `${nm} reaches the title game in <b>${fmt(inn)}</b> of ${fmt(tot)} combinations of the ${und.length} open games${mar ? `, with ${fmt(mar)} more decided by later tiebreakers` : ''}.`}</p>
+      V.innerHTML = `<h3>${pw > 0 ? pc(pw) + ' model chance' : (mar ? 'Only through ' + (E.rules.stop || 'a draw') : nm + ' is out')}</h3>
+        <p class="num">${sampled ? `Estimated from ${fmt(tot)} simulations of the ${und.length} open games.` : `${nm} reaches the title game in <b>${fmt(inn)}</b> of ${fmt(tot)} combinations of the ${und.length} open games${mar ? (estMode() ? `, ${fmt(mar)} of them through an estimated rating step` : `, with ${fmt(mar)} more decided by ${E.rules.stop}`) : ''}.`}</p>
         <p style="color:var(--muted)">Percentages under each team are FPI win chances. Tap a selected team again to reopen that game.</p>`; };
     if (und.length === R) { const d = D.stats[t]; return show(d.c, d.mc, D.total, d.p, !D.exact); }
     const exact = und.length <= 16, tot = exact ? Math.pow(2, und.length) : 40000; let m = 0, inn = 0, mar = 0, pw = 0;
@@ -214,7 +221,7 @@
     (function step() {
       if (my !== job) return; const end = Math.min(tot, m + 4000);
       for (; m < end; m++) { let w = 1; for (let k = 0; k < und.length; k++) { const g = und[k], h = D.rem[g][3], b = exact ? (m >> k) & 1 : (Math.random() < h ? 1 : 0); p[g] = b; if (exact) w *= b ? h : 1 - h; }
-        E.apply(p); const s = stat(E.title()); if (s === 1) { inn++; pw += exact ? w : 1 / tot; } else if (s === 2) mar++; }
+        E.apply(p); const r = E.title(), s = stat(r); if (s === 1) { inn++; pw += exact ? w : 1 / tot; if (r.est.includes(t)) mar++; } else if (s === 2) mar++; }
       if (m < tot) { V.innerHTML = `<h3>Calculating ${Math.round(100 * m / tot)}%</h3><p>${und.length} games open.</p>`; setTimeout(step, 0); return; }
       show(inn, mar, tot, pw, !exact);
     })();

@@ -72,20 +72,21 @@ function analyze(C, ph) {
   let tally = null;
   function scenario(wt, doCount, doModel) {
     E.apply(p); const r = E.title(); status.fill(0);
-    for (const t of r.sel) status[t] = 1; for (const u of r.und) for (const t of u.group) status[t] = 2;
+    for (const t of r.sel) status[t] = 1; for (const t of r.est) status[t] = 3; for (const u of r.und) for (const t of u.group) status[t] = 2;
     for (let t = 0; t < n; t++) {
       const st = status[t]; if (!doCount && st === 0) { if (doModel && !tally) mT[t * MW + E.W[t]] += wt; continue; }
       const pc = E.pct[t], pool = C.pools[poolOf[t]]; let better = 0, tied = 0, am = 0, tm = 0;
       for (const o of pool) { const d = E.pct[o]; if (d > pc) { better++; am += 1 << o; } else if (d === pc) { tied++; if (o !== t) tm += 1 << o; } }
       const w = E.W[t], k = better > 2 ? 2 : better;
-      if (doCount) { cT[I4(t, w, k, tied)]++; if (st === 1) cI[I4(t, w, k, tied)]++; else if (st === 2) cM[I3(t, w, k)]++; }
+      if (doCount) { cT[I4(t, w, k, tied)]++; if (st & 1) cI[I4(t, w, k, tied)]++; if (st >= 2) cM[I3(t, w, k)]++; }
       if (doModel) {
         if (!tally) mT[t * MW + w] += wt;
-        if (st === 1) {
+        if (st >= 2 && !tally) marP[t] += wt;
+        if (st & 1) {
           const key = w * 1099511627776 + am * 1048576 + tm;
           if (tally) { const o = tally[t].get(key); if (o) { o.prob += wt; for (let g = 0; g < R; g++) if (p[g]) o.hw[g] += wt; } }
           else { mI[I3(t, w, k)] += wt; totP[t] += wt; for (let g = 0; g < R; g++) lev[(t * R + g) * 2 + p[g]] += wt; sig[t].set(key, (sig[t].get(key) || 0) + wt); }
-        } else if (st === 2 && !tally) marP[t] += wt;
+        }
       }
     }
   }
@@ -241,11 +242,12 @@ if (require.main === module) (async () => {
     const remG = cg.filter(g => !g.done), rem = remG.map(g => [ix.get(g.a), ix.get(g.h)]), ph = remG.map(g => prob(g.h, g.a, g.neutral));
     let pools = [ids.map((_, i) => i)], divNames = null;
     if (div[cid] && div[cid].every(d => d.ids.every(id => ix.has(id))) && div[cid][0].ids.length + div[cid][1].ids.length === ids.length) { pools = div[cid].map(d => d.ids.map(id => ix.get(id))); divNames = div[cid].map(d => d.name); }
-    const C = { n: ids.length, ids, ab: ids.map(id => teams[id].ab), played, rem, pools, spots: pools.length === 2 ? 1 : 2 };
+    const ncw = ids.map(id => { let w = 0, fcs = 0; for (const g of games) { if (g.ccg || (g.conf && ix.has(g.h) && ix.has(g.a)) || (g.h !== id && g.a !== id)) continue; const home = g.h === id, opp = home ? g.a : g.h, won = g.done ? (home ? g.hs > g.as : g.as > g.hs) : (home ? prob(g.h, g.a, g.neutral) >= 0.5 : prob(g.h, g.a, g.neutral) < 0.5); if (!won) continue; if (fpi[opp] === undefined) { if (fcs) continue; fcs = 1; } w++; } return w; });
+    const C = { slug: CONFS[cid][1], n: ids.length, ids, ab: ids.map(id => teams[id].ab), played, rem, pools, spots: pools.length === 2 ? 1 : 2, rate: ids.map(rate), rank: ids.map(id => cfpRank[id] || 0), nc: ncw };
     const t1 = Date.now(), A = analyze(C, ph);
     console.log(CONFS[cid][0], 'teams', C.n, 'played', played.length, 'left', rem.length, A.exact ? 'exact' : 'sampled', (Date.now() - t1) + 'ms', 'top:', A.stats.map((s, i) => [C.ab[i], s.p]).sort((a, b) => b[1] - a[1]).slice(0, 4).map(x => x[0] + ' ' + (100 * x[1]).toFixed(1) + '%').join(', '), 'dead:', A.stats.filter(s => s.dead).length);
     const now = ids.map((_, i) => [0, 0]); played.forEach(g => { now[g[0]][0]++; now[g[1]][1]++; });
-    const out = { id: cid, slug: CONFS[cid][1], name: CONFS[cid][0], exact: A.exact, total: A.total, spots: C.spots, pools, divNames, played, rem: remG.map((g, i) => [rem[i][0], rem[i][1], day(g.date), r4(ph[i])]),
+    const out = { id: cid, slug: CONFS[cid][1], name: CONFS[cid][0], exact: A.exact, total: A.total, spots: C.spots, pools, divNames, und: Engine.RULES[C.slug].stop ? 'margin' : 'est', rate: C.rate, rank: C.rank, nc: C.nc, played, rem: remG.map((g, i) => [rem[i][0], rem[i][1], day(g.date), r4(ph[i])]),
       teams: ids.map((id, i) => { const t = teams[id]; return { id, ab: t.ab, loc: t.loc, nick: t.nick, color: t.color, alt: t.alt, logo: t.logo, fpi: r4(rate(id)), rk: cfpRank[id] || null, w: now[i][0], l: now[i][1], ow: (overall[id] || [0, 0])[0], ol: (overall[id] || [0, 0])[1] }; }), stats: A.stats };
     fs.writeFileSync(path.join(OUT, 'data', CONFS[cid][1] + '.json'), JSON.stringify(out));
     confs.push({ id: cid, C });
