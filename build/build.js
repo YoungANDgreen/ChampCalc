@@ -164,6 +164,13 @@ function cfp(D, confs, prob) {
     }
     fit = r4(best / rankedIds.length);
   }
+  // anchor to the committee: ranked teams start exactly where the committee has them, and only future results move them
+  const off = {}; fbs.forEach(id => { off[id] = 0; });
+  if (rankedIds.length >= 20) {
+    const m0 = {}; fbs.forEach(id => { m0[id] = base[id].res + WF * rate(id) - LP * base[id].l; });
+    const S = fbs.map(id => m0[id]).sort((a, b) => b - a), floor = S[Math.min(rankedIds.length, S.length) - 1];
+    for (const id of fbs) off[id] = cfpRank[id] ? S[cfpRank[id] - 1] - m0[id] : Math.min(0, floor - 0.05 - m0[id]);
+  }
   const st = {}; fbs.forEach(id => { st[id] = { make: 0, auto: 0, atl: 0, bye: 0, host: 0, title: 0, fin: 0, champ: 0, ccg: 0, seed: new Array(12).fill(0), byL: {}, wo: [0, 0] }; });
   const cur = {}; fbs.forEach(id => { cur[id] = { w: 0, l: 0, res: 0, lost: false, champ: false }; });
   const G6 = Object.keys(CONFS).map(Number).filter(c => !P4.includes(c));
@@ -193,7 +200,7 @@ function cfp(D, confs, prob) {
       if (aw) { A.w++; Bt.l++; } else { A.l++; Bt.w++; }
       const ch = aw ? fin[0] : fin[1]; champs[cid] = ch; cur[ch].champ = true;
     }
-    const sc = fbs.map(id => { const c = cur[id]; return [id, c.res + WF * rate(id) - LP * c.l + (c.champ ? CH : 0)]; }).sort((a, b) => b[1] - a[1]);
+    const sc = fbs.map(id => { const c = cur[id]; return [id, c.res + WF * rate(id) - LP * c.l + (c.champ ? CH : 0) + off[id]]; }).sort((a, b) => b[1] - a[1]);
     const pos = {}; sc.forEach((x, i) => { pos[x[0]] = i; });
     const autos = new Map(); P4.forEach(c => { if (champs[c]) autos.set(champs[c], CONFS[c][0] + ' champion'); });
     let g6 = null; for (const c of G6) if (champs[c] && (g6 === null || pos[champs[c]] < pos[g6[0]])) g6 = [champs[c], CONFS[c][0] + ' champion']; if (g6 && !autos.has(g6[0])) autos.set(g6[0], g6[1]);
@@ -246,6 +253,7 @@ if (require.main === module) (async () => {
   }
   const P = cfp(D, confs, prob);
   console.log('CFP fit', P.fit, 'wf', P.wf, 'lp', P.lp, 'top:', P.teams.slice(0, 14).map(t => t.ab + ' ' + (100 * t.make).toFixed(0)).join(', '));
+  console.log('ranked check:', P.teams.filter(t => t.rk).sort((a, b) => a.rk - b.rk).map(t => t.rk + '.' + t.ab + ' ' + t.w + '-' + t.l + ' ' + (100 * t.make).toFixed(0)).join(', '));
   console.log('chalk:', P.chalk.map(x => x.seed + '.' + x.ab + '[' + x.tag + ']').join(' '));
   fs.writeFileSync(path.join(OUT, 'data', 'cfp.json'), JSON.stringify(P));
   const lastDone = games.filter(g => g.done).map(g => g.date).sort().pop();
