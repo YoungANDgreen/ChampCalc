@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oklahoma Sooners – 2026 SEC Championship Mathematical Paths</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: one scrolling column. school picker, scoreboard header, top-5 paths, tree, builder, standings */
+  color-scheme:dark;
+  --brand:#a51d24; --brand-hi:#d4424a; --accent:#dcb65f; --on-brand:#f4ecd9;
+  --cream:#f4ecd9; --muted:#bdb1a6;
+  --bg:color-mix(in srgb,var(--brand) 9%,#0d0b0b);
+  --panel:color-mix(in srgb,var(--brand) 13%,#181515);
+  --panel-2:color-mix(in srgb,var(--brand) 20%,#1e1a1a);
+  --line:color-mix(in srgb,var(--brand-hi) 30%,#2c2828);
+  --ok:#56c283; --warn:#ecc44c; --bad:#f06464;
+  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--cream);font:400 16px/1.5 var(--body);transition:background-color .5s;
+  background-image:radial-gradient(900px 440px at 50% -120px,color-mix(in srgb,var(--brand) 55%,transparent),transparent 70%)}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+a{color:var(--accent)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* logos */
+.logo{position:relative;display:inline-grid;place-items:center;border-radius:50%;background:#f6f1e6;flex:none;width:var(--sz,40px);height:var(--sz,40px);
+  box-shadow:0 0 0 2px var(--lb,var(--brand-hi))}
+.logo img{width:78%;height:78%;object-fit:contain;display:block}
+.logo b{display:none;font:700 calc(var(--sz,40px)*.3)/1 var(--display);letter-spacing:.03em;color:var(--lo,#fff)}
+.logo.nologo{background:var(--lb,var(--brand))}
+.logo.nologo img{display:none}.logo.nologo b{display:block}
+
+/* picker */
+.picker{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;padding-top:16px}
+.chip{display:grid;justify-items:center;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 2px 6px;cursor:pointer;transition:transform .15s,border-color .15s}
+.chip:hover{transform:translateY(-2px);border-color:var(--accent)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--panel-2);box-shadow:inset 0 -3px 0 var(--accent)}
+.chip span{font:600 13px/1 var(--display);letter-spacing:.08em}
+.chip small{font-size:11.5px;color:var(--muted);line-height:1}
+.chip.dead{opacity:.62}.chip.dead small{color:var(--bad)}
+
+/* header */
+header.top{padding:22px 0 0}
+.hero{display:flex;gap:16px;align-items:center}
+.hero .logo{--sz:92px}
+.herologo{position:relative;flex:none}
+.eyebrow{font:600 13px/1.2 var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:clamp(28px,6vw,48px);line-height:1.02;text-transform:uppercase;margin-top:8px}
+h1 span{color:var(--brand-hi)}
+.lede{color:var(--muted);max-width:66ch;margin:12px 0 0}
+.badge{display:inline-flex;align-items:center;gap:8px;font:700 13px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;
+  padding:7px 11px;border-radius:4px;background:var(--brand);color:var(--on-brand);border:1px solid var(--brand-hi)}
+.badge i{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+.yard{height:14px;margin:22px 0 0;border-top:2px solid var(--accent);border-bottom:1px solid var(--line);
+  background:repeating-linear-gradient(90deg,transparent 0 18px,rgba(244,236,217,.28) 18px 19px)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.tile b{display:block;font:700 clamp(26px,6vw,38px)/1 var(--display);color:var(--accent)}
+.tile span{display:block;font-size:13px;color:var(--muted);margin-top:6px;line-height:1.35}
+.wins{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.wins div{flex:1 1 150px;background:var(--panel-2);border-left:3px solid var(--brand-hi);border-radius:4px;padding:8px 10px;font-size:14px}
+.wins small{display:block;color:var(--muted);font:600 11px/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase}
+.quote{font:600 clamp(20px,4.4vw,28px)/1.2 var(--display);color:var(--cream);margin:14px 0 0;max-width:30ch;text-wrap:balance}
+
+/* stamp */
+.stamp{position:absolute;left:50%;top:50%;translate:-50% -50%;transform:rotate(-14deg);white-space:nowrap;pointer-events:none;
+  font:700 calc(var(--sz,92px)*.2)/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:#e0262b;
+  border:calc(var(--sz,92px)*.03) double #e0262b;border-radius:calc(var(--sz,92px)*.04);padding:.28em .5em .22em;background:rgba(255,255,255,.72);
+  -webkit-mask-image:radial-gradient(circle at 30% 40%,#000 0 55%,rgba(0,0,0,.75) 56% 100%),repeating-linear-gradient(115deg,#000 0 7px,rgba(0,0,0,.82) 7px 9px);
+  -webkit-mask-composite:source-in;mask-composite:intersect;
+  text-shadow:0 0 1px #e0262b}
+.ov{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:20px;cursor:pointer}
+.ov-bg{position:absolute;inset:0;background:rgba(6,4,4,.86);backdrop-filter:blur(3px)}
+.ov-logo{position:relative;--sz:min(62vw,300px)}
+.ov-logo .logo{box-shadow:0 0 0 6px var(--brand-hi),0 30px 80px rgba(0,0,0,.6)}
+.ov-q{position:relative;margin:0;text-align:center;font:600 clamp(20px,5vw,30px)/1.2 var(--display);max-width:24ch;text-wrap:balance;color:#f4ecd9}
+
+section{margin-top:40px}
+h2{font-size:26px;text-transform:uppercase;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2 small{font:500 14px/1.3 var(--body);color:var(--muted);text-transform:none;letter-spacing:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:10px 0 14px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:var(--tone)}
+.t-ok{--tone:var(--ok)} .t-warn{--tone:var(--warn)} .t-bad{--tone:var(--bad)} .t-info{--tone:var(--accent)}
+
+/* top paths */
+.paths{display:grid;gap:10px;margin-top:12px}
+.path{display:grid;grid-template-columns:auto 1fr;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.path .rk{font:700 34px/1 var(--display);color:var(--accent);min-width:28px}
+.path h3{font-size:20px;text-transform:uppercase;line-height:1.15}
+.path p{margin:4px 0 0;font-size:14px;color:var(--muted)}
+.path .pr{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:13.5px}
+.path .pr b{color:var(--accent);font:700 17px/1 var(--display)}
+.must{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.must span{font-size:12.5px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:4px;padding:3px 7px}
+.must span i{color:var(--muted);font-style:normal}
+
+/* tree */
+.node{position:relative}
+.node>button{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--tone);border-radius:8px;padding:12px;transition:background .2s,border-color .2s}
+.node>button:hover{background:var(--panel-2);border-color:var(--tone)}
+.node>button[aria-expanded="true"]{background:var(--panel-2)}
+.node.leaf>button{cursor:default}
+.mark{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 14px/1 var(--display);
+  background:color-mix(in srgb,var(--tone) 18%,transparent);color:var(--tone);border:1px solid var(--tone);margin-top:1px}
+.nt{font:600 19px/1.15 var(--display);letter-spacing:.02em;text-transform:uppercase}
+.ns{display:block;color:var(--muted);font-size:14px;line-height:1.4;margin-top:4px}
+.chev{font-size:13px;color:var(--muted);transition:transform .3s;margin-top:4px}
+button[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.meter{display:block;margin-top:9px}
+.meter em{display:block;height:6px;border-radius:3px;background:rgba(244,236,217,.1);overflow:hidden}
+.meter em b{display:block;height:100%;background:var(--tone);border-radius:3px}
+.meter span{display:block;font-size:12.5px;color:var(--muted);margin-top:4px}
+.pill{display:inline-block;font:700 11px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;padding:4px 7px;border-radius:3px;
+  color:var(--tone);border:1px solid var(--tone);margin-left:8px;vertical-align:2px;white-space:nowrap}
+.fold{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s cubic-bezier(.2,.7,.2,1)}
+.fold.open{grid-template-rows:1fr}
+.fold>div{overflow:hidden;min-height:0}
+.kids{position:relative;margin:0 0 0 13px;padding:12px 0 2px 18px;display:grid;gap:10px}
+.kids::before{content:"";position:absolute;left:0;top:0;bottom:14px;width:2px;
+  background:repeating-linear-gradient(180deg,var(--accent) 0 6px,transparent 6px 14px);background-size:2px 14px;animation:flow 1s linear infinite;opacity:.7}
+.kids>.node::before{content:"";position:absolute;left:-18px;top:24px;width:16px;height:2px;background:var(--accent);opacity:.55}
+@keyframes flow{to{background-position:0 14px}}
+.detail{background:rgba(0,0,0,.22);border:1px dashed var(--line);border-radius:8px;padding:12px 14px;font-size:14.5px}
+.detail p{margin:0 0 8px}.detail p:last-child{margin-bottom:0}
+.rows{display:grid;gap:5px;margin-top:8px}
+.rows div{display:grid;grid-template-columns:minmax(92px,auto) 1fr auto;gap:10px;align-items:center;font-size:13.5px}
+.rows em{height:6px;border-radius:3px;background:rgba(244,236,217,.1);overflow:hidden;display:block}
+.rows em b{display:block;height:100%;background:var(--tone,var(--accent))}
+[data-tip]{position:relative;border-bottom:1px dotted var(--accent);cursor:help}
+[data-tip]:hover::after,[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:min(270px,72vw);
+  background:#0c0808;border:1px solid var(--accent);border-radius:6px;padding:8px 10px;font:400 13px/1.4 var(--body);color:var(--cream);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.btn{background:transparent;border:1px solid var(--line);border-radius:6px;padding:7px 12px;font:600 14px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.empty{background:var(--panel);border:1px dashed var(--bad);border-radius:8px;padding:16px;color:var(--muted)}
+
+/* builder */
+.builder{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+.games{display:grid;gap:6px}
+.grp{font:600 12px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:10px 0 2px}
+.game{display:grid;grid-template-columns:1fr auto 1fr auto;gap:6px;align-items:center}
+.game button{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 8px;cursor:pointer;font:600 15px/1.1 var(--display);letter-spacing:.04em;text-transform:uppercase;min-height:40px;transition:background .15s,border-color .15s}
+.game button:hover{border-color:var(--accent)}
+.game button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand);border-color:var(--brand-hi)}
+.game button small{display:block;font:500 11px/1.2 var(--body);letter-spacing:0;opacity:.7;text-transform:none}
+.game .at{color:var(--muted);font-size:12px}
+.game .dt{color:var(--muted);font-size:12px;width:44px;text-align:right}
+.verdict{position:sticky;top:12px;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--tone,var(--accent));border-radius:8px;padding:14px}
+.verdict h3{font-size:24px;text-transform:uppercase;color:var(--tone,var(--accent))}
+.verdict p{margin:6px 0 0;font-size:14.5px}
+.verdict ol{margin:8px 0 0;padding-left:20px;font-size:13.5px;color:var(--muted)}
+.stand{margin-top:10px;display:grid;gap:3px;font-size:14px}
+.stand div{display:flex;justify-content:space-between;padding:3px 8px;border-radius:4px}
+.stand .in{background:rgba(86,194,131,.16);color:var(--ok);font-weight:600}
+.stand .me{outline:1px solid var(--brand-hi)}
+
+/* standings */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+th{font:600 12px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px;background:var(--panel)}
+td{padding:7px 10px;border-top:1px solid var(--line);vertical-align:middle}
+tr.row{cursor:pointer}tr.row:hover td{background:var(--panel)}
+tr.sel td{background:var(--panel-2)}
+td.tm{display:flex;gap:9px;align-items:center;font-weight:600}
+td .logo{--sz:28px}
+td.r,th.r{text-align:right}
+.guide{display:grid;gap:6px;margin-top:12px}
+.guide div{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center;font-size:14px}
+.guide .bar{position:relative;height:18px;border-radius:3px;background:rgba(244,236,217,.08)}
+.guide .bar b{position:absolute;left:0;top:0;bottom:0;background:var(--ok);border-radius:3px;opacity:.8}
+.guide .bar i{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--bad)}
+.guide .bar span{position:absolute;right:5px;top:0;font:600 12px/18px var(--body);text-shadow:0 1px 2px #000}
+details{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 14px}
+summary{cursor:pointer;font:600 20px/1.2 var(--display);text-transform:uppercase;letter-spacing:.03em;padding:13px 0;list-style:none;display:flex;justify-content:space-between}
+summary::after{content:"+";color:var(--accent);font-size:22px;line-height:1}
+details[open] summary::after{content:"–"}
+details ol{margin:0;padding:0 0 14px 22px}
+details li{margin:6px 0}
+details li b{color:var(--accent)}
+.note{background:linear-gradient(90deg,color-mix(in srgb,var(--brand) 45%,transparent),color-mix(in srgb,var(--brand) 10%,transparent));border:1px solid var(--brand-hi);border-radius:8px;padding:16px}
+.note h3{font-size:24px;text-transform:uppercase;color:var(--accent)}
+.note p{margin:8px 0 0;max-width:70ch}
+footer{margin-top:28px;font-size:13px;color:var(--muted)}
+footer p{margin:6px 0;max-width:80ch}
+[hidden]{display:none!important}
+@media (max-width:760px){
+  .picker{grid-template-columns:repeat(4,1fr)}
+  .hero{gap:12px}.hero .logo{--sz:68px}
+  .builder{grid-template-columns:1fr}.verdict{position:static;order:-1}
+  .tiles{grid-template-columns:1fr}.tile{display:grid;grid-template-columns:minmax(86px,auto) 1fr;gap:12px;align-items:center}.tile span{margin:0}
+  .kids{margin-left:6px;padding-left:14px}.kids>.node::before{left:-14px;width:12px}
+  .node>button{gap:9px;padding:11px 10px}.nt{font-size:17.5px}
+  .guide div{grid-template-columns:1fr 110px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="picker" id="picker" aria-label="Pick a school"></nav>
+<header class="top" id="top"></header>
+
+<section id="s-paths">
+  <h2>Five most likely paths <small>Ranked by SP+ win probabilities</small></h2>
+  <div class="paths" id="paths"></div>
+</section>
+
+<section id="s-tree">
+  <h2>The path tree <small>Tap a node to open its branches</small></h2>
+  <div class="legend">
+    <span class="t-ok"><i class="dot"></i>Viable path</span>
+    <span class="t-warn"><i class="dot"></i>Requires tiebreaker</span>
+    <span class="t-bad"><i class="dot"></i>Eliminated</span>
+    <span><span data-tip="One combination is one full set of winners for the 20 remaining SEC games. Counts treat every game as a coin flip. Model chance weights each game by SP+ instead." tabindex="0">Combinations vs model chance</span></span>
+  </div>
+  <div class="toolbar"><button class="btn" id="expand">Expand all</button><button class="btn" id="collapse">Collapse all</button></div>
+  <div id="tree"></div>
+</section>
+
+<section>
+  <h2>Scenario builder <small>Pick winners and the tiebreaker runs live</small></h2>
+  <div class="toolbar"><button class="btn" id="winout">Selected school wins out</button><button class="btn" id="chalk">Pick all favorites</button><button class="btn" id="reset">Clear all</button></div>
+  <div class="builder">
+    <div class="games" id="games"></div>
+    <div class="verdict" id="verdict" aria-live="polite"></div>
+  </div>
+</section>
+
+<section id="s-guide">
+  <h2>Rooting guide <small id="guide-sub"></small></h2>
+  <div class="legend"><span class="t-ok"><i class="dot"></i>Title-game chance if the listed team wins</span><span class="t-bad"><i class="dot"></i>If it loses</span></div>
+  <div class="guide" id="guide"></div>
+</section>
+
+<section>
+  <h2>All 16 teams <small>Tap a row to switch schools</small></h2>
+  <div class="tbl"><table id="table"></table></div>
+</section>
+
+<section>
+  <details>
+    <summary>Official SEC tiebreaker order</summary>
+    <ol type="A">
+      <li><b>Head-to-head</b> among the tied teams. In a tie of three or more where not everyone played everyone, a team advances only by beating all the others, and is dropped only by losing to all of them.</li>
+      <li><b>Record against common conference opponents</b>, meaning opponents every tied team played.</li>
+      <li><b>Record against the highest-placed common opponent</b>, then the next one down the standings until something separates.</li>
+      <li><b>Combined conference winning percentage of each team's SEC opponents.</b></li>
+      <li><b>Capped relative scoring margin</b> across conference games, measured against each opponent's season scoring averages.</li>
+      <li><b>Random draw.</b></li>
+    </ol>
+    <p style="margin:0 0 14px;color:var(--muted);font-size:14px">When a step lifts one team clear, that team is in and the others restart at step A. When a step drops teams below a top group that is still too large, the dropped teams are out and the top group restarts. Two teams tied alone for first both go. The league office has the final say on interpretation.</p>
+  </details>
+</section>
+
+<section><div class="note" id="note"></div></section>
+
+<footer>
+  <p>Method: results and remaining schedules through Nov 7, 2026. All 1,048,576 outcomes of the last 20 SEC games are run through tiebreaker steps A to D, with tied common opponents in step C treated as one group. Ties that survive step D count as scoring-margin cases, not as in or out.</p>
+  <p>Model chance: each game's win probability comes from ESPN SP+ ratings dated Nov 8, 2026, with 2.5 points of home field and a 16.5-point standard deviation. That conversion is this page's assumption, not ESPN's.</p>
+  <p>Logos load from ESPN's image server. Where a viewer blocks outside images, each school shows a lettered badge instead.</p>
+  <p>Sources: <a href="https://therebelwalk.com/2026/11/sec-football-standings-week-10-georgia-ole-miss/">The Rebel Walk standings and schedules</a> · <a href="https://sports.yahoo.com/articles/2026-sec-football-power-rankings-040936999.html">Yahoo Sports results</a> · <a href="https://www.espn.com/college-football/story/_/id/49868647/2026-college-football-sp+-rankings-all-138-fbs-teams">ESPN SP+ ratings</a> · <a href="https://collegefootballnetwork.com/wp-content/uploads/2024/11/SEC-Tiebreaking-Procedures.pdf">SEC tiebreaking procedures (PDF)</a></p>
+</footer>
+</div>
+
+<script>
+const DATA=/*DATA*/;
+/*ENGINE*/
+// [nickname, ESPN id, brand, brand-hi, accent, on-brand]
+const META={UGA:['Bulldogs',61,'#ba0c2f','#e5475f','#c9cacb','#ffffff'],ALA:['Crimson Tide',333,'#9e1b32','#d24a63','#d9dbdc','#ffffff'],
+ UK:['Wildcats',96,'#0033a0','#5d8bf0','#e3ebff','#ffffff'],TEX:['Longhorns',251,'#bf5700','#ee8f3f','#f3e6d6','#ffffff'],
+ TENN:['Volunteers',2633,'#ff8200','#ffa64d','#f1f1f1','#1c1003'],MISS:['Rebels',145,'#14213d','#e04a5c','#9fbaf0','#ffffff'],
+ SC:['Gamecocks',2579,'#73000a','#c63a47','#e2e2e2','#ffffff'],LSU:['Tigers',99,'#461d7c','#9a6ce0','#fdd023','#ffffff'],
+ MIZ:['Tigers',142,'#f1b82d','#f6cf68','#f1b82d','#141414'],OU:['Sooners',201,'#a51d24','#d4424a','#dcb65f','#f4ecd9'],
+ FLA:['Gators',57,'#0021a5','#6283f5','#fa6a32','#ffffff'],AUB:['Tigers',2,'#0c2340','#5f95d6','#f08a36','#ffffff'],
+ MSST:['Bulldogs',344,'#660000','#b8444a','#d2d2d2','#ffffff'],ARK:['Razorbacks',8,'#9d2235','#d5506a','#efefef','#ffffff'],
+ TAMU:['Aggies',245,'#500000','#aa4046','#e3d9c8','#ffffff'],VAN:['Commodores',238,'#cfae70','#e2c995','#cfae70','#141414']};
+const ALL=2**REM.length,BASE=build(REM.map(()=>0)); // base only used for current records below
+const NOW={};IDS.forEach(t=>{NOW[t]={w:0,l:0}});PLAYED.forEach(g=>{NOW[g[0]].w++;NOW[g[1]].l++});
+const left=t=>REM.map((g,i)=>({i,g})).filter(x=>x.g[0]===t||x.g[1]===t);
+const dead=t=>DATA.teams[t].c===0&&DATA.teams[t].mc===0;
+const fmt=n=>n.toLocaleString('en-US');
+const pc=x=>{const v=100*x;return (v===0?'0':v>=10?v.toFixed(1):v>=1?v.toFixed(1):v>=.01?v.toFixed(2):'<0.01')+'%'};
+const logo=t=>`<span class="logo" style="--lb:${META[t][2]};--lo:${META[t][5]}"><img src="https://a.espncdn.com/i/teamlogos/ncaa/500/${META[t][1]}.png" alt="${TEAMS[t]} logo" onerror="this.parentNode.classList.add('nologo')"><b aria-hidden="true">${t}</b></span>`;
+const list=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const meter=(a,b,extra)=>`<span class="meter"><em><b style="width:${Math.max(a?1.5:0,100*a/b)}%"></b></em><span class="num">In: ${fmt(a)} of ${fmt(b)} combinations · ${pc(a/b)}${extra?' · '+extra:''}</span></span>`;
+let cur='OU';
+
+function theme(t){const m=META[t],s=document.documentElement.style;s.setProperty('--brand',m[2]);s.setProperty('--brand-hi',m[3]);s.setProperty('--accent',m[4]);s.setProperty('--on-brand',m[5])}
+
+/* picker + table */
+function drawPicker(){
+  document.getElementById('picker').innerHTML=IDS.map(t=>`<button type="button" class="chip${dead(t)?' dead':''}" data-t="${t}" aria-pressed="${t===cur}" style="--sz:38px" title="${TEAMS[t]}">${logo(t)}<span>${t}</span><small class="num">${dead(t)?'OUT':pc(DATA.teams[t].p)}</small></button>`).join('');
+  document.getElementById('table').innerHTML=`<tr><th>Team</th><th>SEC</th><th class="r">SP+</th><th>Left</th><th class="r">Title game, model</th><th class="r">Combinations</th></tr>`+
+   IDS.map(t=>{const d=DATA.teams[t];return `<tr class="row${t===cur?' sel':''}" data-t="${t}" tabindex="0"><td class="tm">${logo(t)}${TEAMS[t]}</td><td class="num">${NOW[t].w}-${NOW[t].l}</td><td class="r num">${DATA.sp[t].toFixed(1)}</td>
+    <td>${left(t).map(x=>(x.g[0]===t?'at '+x.g[1]:'vs '+x.g[0])).join(', ')}</td><td class="r num">${dead(t)?'<span style="color:var(--bad)">Eliminated</span>':pc(d.p)}</td><td class="r num">${fmt(d.c)}</td></tr>`}).join('');
+}
+document.getElementById('picker').addEventListener('click',e=>{const b=e.target.closest('.chip');if(b)select(b.dataset.t,true)});
+document.getElementById('table').addEventListener('click',e=>{const r=e.target.closest('tr.row');if(r)select(r.dataset.t,true)});
+document.getElementById('table').addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('tr.row');if(r)select(r.dataset.t,true)}});
+
+/* header */
+function drawTop(t){
+  const d=DATA.teams[t],L=left(t),mx=NOW[t].w+L.length,R=d.rec,gone=dead(t);
+  const live=Object.keys(R).map(Number).filter(w=>R[w].i||R[w].m).sort((a,b)=>b-a);
+  let badge='Eliminated';
+  if(!gone){const top=R[mx];badge=top.i===top.t?'Wins out and it is in':(live.length===1||R[live[1]].i/R[live[1]].t<.02?'Win Out Required':'Needs help')}
+  const tiles=gone?'':`<div class="tiles">
+    <div class="tile"><b class="num">${pc(d.p)}</b><span>model chance to reach the title game, from SP+ win probabilities</span></div>
+    <div class="tile"><b class="num">${pc(d.c/ALL)}</b><span>of all outcome combinations put ${TEAMS[t]} in (${fmt(d.c)} of ${fmt(ALL)})</span></div>
+    <div class="tile"><b class="num">${pc(R[mx].i/R[mx].t)}</b><span>of combinations work if ${TEAMS[t]} wins out to finish ${mx}-${9-mx}</span></div></div>`;
+  document.getElementById('top').innerHTML=`<div class="hero"><div class="herologo" id="herologo">${logo(t)}${gone?'<div class="stamp">Eliminated</div>':''}</div>
+    <div><div class="eyebrow">SEC standings through Nov 7, 2026 · Atlanta, Dec 5</div>
+    <h1>${TEAMS[t]} ${META[t][0]} – 2026 <span>SEC Championship</span> Mathematical Paths</h1></div></div>
+    ${gone?`<p class="quote">In the SEC it just means more, it didn't mean enough to ${TEAMS[t]} this year.</p>
+      <p class="lede">${TEAMS[t]} is ${NOW[t].w}-${NOW[t].l} in the SEC and can finish no better than ${mx}-${9-mx}. None of the ${fmt(ALL)} ways the last 20 conference games can finish puts it in Atlanta.</p>`
+     :`<p class="lede">${TEAMS[t]} is ${NOW[t].w}-${NOW[t].l} in the SEC with ${L.length} conference game${L.length>1?'s':''} left. Every one of the ${fmt(ALL)} ways the last 20 SEC games can finish was run through the tiebreaker, steps A to D.</p>`}
+    <p style="margin:14px 0 0"><span class="badge"><i></i>${badge}</span></p>
+    <div class="wins">${L.map(x=>`<div><small>${x.g[2]} · ${x.g[1]===t?'Home':'Away'}</small>${x.g[1]===t?'vs '+TEAMS[x.g[0]]:'at '+TEAMS[x.g[1]]} <span style="color:var(--muted)" class="num">· ${pc(x.g[1]===t?DATA.ph[x.i]:1-DATA.ph[x.i])}</span></div>`).join('')}</div>
+    ${tiles}<div class="yard" aria-hidden="true"></div>`;
+  const note=document.getElementById('note');
+  const head=gone?'Eliminated':d.p>=.5?'Favorite to reach Atlanta':d.p>=.1?'Live contender':d.p>=.01?'Long shot, mathematically open':'Extremely low probability but mathematically open';
+  note.innerHTML=`<h3>${head}</h3><p>${gone?`No combination of results gets ${TEAMS[t]} to the title game.`:
+    `${TEAMS[t]} reaches the title game in ${fmt(d.c)} of ${fmt(ALL)} remaining combinations (${pc(d.c/ALL)})${d.mc?`, plus ${fmt(d.mc)} that would come down to scoring margin`:''}. Weighted by SP+ win probabilities, that is a ${pc(d.p)} chance. Combination counts treat every game as a coin flip, so the model figure is the better estimate of real odds.`}</p>`;
+}
+
+/* top 5 paths */
+function drawPaths(t){
+  const d=DATA.teams[t],el=document.getElementById('paths');
+  el.innerHTML=d.paths.map((p,i)=>{
+    const rec=`${p.w}-${9-p.w}`,ab=p.above.map(x=>TEAMS[x]),ti=p.tied.map(x=>TEAMS[x]),n=ti.length+1;
+    let h,sub;
+    if(!ab.length&&!ti.length){h=`Finish ${rec}, alone in first`;sub='No tiebreaker. The No. 1 seed.'}
+    else if(!ab.length&&ti.length===1){h=`Finish ${rec}, tied for first with ${ti[0]}`;sub='Both teams go. The tiebreaker only sets the home side.'}
+    else if(!ab.length){h=`Finish ${rec}, survive a ${n}-way tie for first`;sub=`Tied at ${rec} with ${list(ti)}. Top two of the group advance.`}
+    else if(!ti.length){h=`Finish ${rec}, second outright behind ${ab[0]}`;sub='No tiebreaker needed.'}
+    else{h=`Finish ${rec} behind ${ab[0]}, win a ${n}-way tiebreak for second`;sub=`Tied at ${rec} with ${list(ti)}. One spot for the group.`}
+    const must=p.g.filter(x=>x[2]===1).map(x=>{const g=REM[x[0]],w=x[1]?g[1]:g[0],l=x[1]?g[0]:g[1];return `<span>${TEAMS[w]} over ${TEAMS[l]} <i class="num">${g[2]} · ${pc(x[1]?DATA.ph[x[0]]:1-DATA.ph[x[0]])}</i></span>`});
+    return `<article class="path"><div class="rk num">${i+1}</div><div><h3>${h}</h3><p>${sub}</p>
+     <div class="pr"><span><b class="num">${pc(p.prob)}</b> model chance</span><span><b class="num">${pc(p.prob/d.p)}</b> of ${TEAMS[t]}'s title-game chance</span></div>
+     ${must.length?`<p style="margin-top:8px;color:var(--cream)">Required in every version of this path:</p><div class="must">${must.join('')}</div>`:'<p style="margin-top:8px">No single game is required. Several different result sets produce these final standings.</p>'}</div></article>`}).join('');
+}
+
+/* tree */
+let uid=0;
+function renderNode(n){
+  const id='n'+(++uid),has=!!(n.detail||n.kids&&n.kids.length);
+  const el=document.createElement('div');el.className='node t-'+n.tone+(has?'':' leaf');
+  el.innerHTML=`<button type="button" ${has?`aria-expanded="${!!n.open}" aria-controls="${id}"`:'aria-disabled="true"'}>
+    <span class="mark" aria-hidden="true">${n.mark}</span>
+    <span><span class="nt">${n.title}</span>${n.pill?`<span class="pill">${n.pill}</span>`:''}<span class="ns">${n.sub||''}</span>${n.meter||''}</span>
+    ${has?'<span class="chev" aria-hidden="true">▶</span>':'<span></span>'}</button>`;
+  if(has){
+    const fold=document.createElement('div');fold.className='fold'+(n.open?' open':'');fold.id=id;
+    const inner=document.createElement('div'),kids=document.createElement('div');kids.className='kids';
+    if(n.detail){const dd=document.createElement('div');dd.className='detail';dd.innerHTML=n.detail;kids.appendChild(dd)}
+    (n.kids||[]).forEach(k=>kids.appendChild(renderNode(k)));
+    inner.appendChild(kids);fold.appendChild(inner);el.appendChild(fold);
+    el.firstElementChild.addEventListener('click',e=>{const b=e.currentTarget,o=b.getAttribute('aria-expanded')!=='true';b.setAttribute('aria-expanded',o);fold.classList.toggle('open',o)});
+  }
+  return el;
+}
+function sizeRows(B,tone){const ks=Object.keys(B.s).map(Number).sort((a,b)=>a-b);
+  return `<div class="rows t-${tone}">`+ks.map(k=>`<div><span>${k===1?'Alone at this record':k+' teams tied'}</span><em><b style="width:${100*B.s[k][0]/B.s[k][1]}%"></b></em><span class="num">${fmt(B.s[k][0])} / ${fmt(B.s[k][1])}</span></div>`).join('')+'</div>'}
+function branch(B,k,rec,t){
+  if(!B)return null;const name=TEAMS[t];
+  if(k===2)return{tone:'bad',mark:'✕',title:`Branch C · 2+ teams better than ${rec}`,pill:'Eliminated',sub:`Two teams ahead fill both spots. ${fmt(B.t)} combinations, zero for ${name}. No further paths.`};
+  const tone=B.i===0?(B.m?'warn':'bad'):(B.i===B.t?'ok':'warn');
+  return{tone,mark:k?'B':'A',title:k?`Branch B · Exactly 1 team better than ${rec}`:`Branch A · 0 teams better than ${rec}`,pill:tone==='ok'?'Viable':tone==='bad'?'Eliminated':'Tiebreaker',
+   sub:k?`One team is locked in as the No. 1 seed. ${name} needs to be the best of the teams at ${rec}.`:`${rec} is the best record in the league. ${name} needs to rank in the top two of the teams at ${rec}.`,
+   meter:meter(B.i,B.t,'model '+pc(B.ip)),
+   detail:`<p>Results by how many teams finish ${rec}, counting ${name}${B.m?`. ${fmt(B.m)} more combinations go to scoring margin`:''}:</p>`+sizeRows(B,tone)};
+}
+function drawTree(t){
+  const d=DATA.teams[t],R=d.rec,L=left(t),mx=NOW[t].w+L.length,name=TEAMS[t];
+  const ws=Object.keys(R).map(Number).sort((a,b)=>b-a),live=ws.filter(w=>R[w].i||R[w].m),deadW=ws.filter(w=>!(R[w].i||R[w].m));
+  const kids=live.map((w,ix)=>{const r=R[w],rec=`${w}-${9-w}`,got=w-NOW[t].w,tone=r.i===r.t?'ok':'warn';
+    return{tone,mark:String(w),open:ix===0,title:`Finish ${rec}`+(w===mx?' · win out':` · go ${got}-${L.length-got}`),pill:tone==='ok'?'Viable':'Needs help',
+     sub:`Model chance of this record: ${pc(r.tp)}. ${name} is in for ${pc(r.i/r.t)} of the combinations at ${rec}.`,meter:meter(r.i,r.t,'model '+pc(r.ip)),
+     kids:[{tone:'info',mark:'?',open:ix===0,title:`How many teams finish better than ${rec}?`,sub:'Zero or one keeps the path open. Two or more closes it.',
+       kids:[branch(r.b[0],0,rec,t),branch(r.b[1],1,rec,t),branch(r.b[2],2,rec,t)].filter(Boolean)}]}});
+  if(deadW.length)kids.push({tone:'bad',mark:'✕',title:`Finish ${deadW[0]}-${9-deadW[0]} or worse`,pill:'Eliminated',sub:`No combination at ${deadW.map(w=>w+'-'+(9-w)).join(', ')} reaches the title game.`});
+  const top=R[mx],must=live.length===1;
+  const root={tone:top.i===top.t?'ok':'warn',mark:'★',open:true,title:must?`${name} must finish ${mx}-${9-mx}`:`${name} can get in at ${live.map(w=>w+'-'+(9-w)).join(', ')}`,
+   pill:must?'Win Out Required':'',sub:`Now ${NOW[t].w}-${NOW[t].l}. Left: ${L.map(x=>x.g[1]===t?'vs '+TEAMS[x.g[0]]:'at '+TEAMS[x.g[1]]).join(', ')}.`,
+   meter:meter(d.c,ALL,'model '+pc(d.p)),kids};
+  const el=document.getElementById('tree');el.innerHTML='';el.appendChild(renderNode(root));
+}
+const setAll=o=>document.querySelectorAll('#tree button[aria-expanded]').forEach(b=>{b.setAttribute('aria-expanded',o);document.getElementById(b.getAttribute('aria-controls')).classList.toggle('open',o)});
+document.getElementById('expand').onclick=()=>setAll(true);
+document.getElementById('collapse').onclick=()=>{setAll(false);document.querySelector('#tree button').click()};
+
+/* rooting guide */
+function drawGuide(t){
+  const d=DATA.teams[t];
+  const rows=REM.map((g,i)=>{const a=d.lev[i][0],h=d.lev[i][1],hw=h>=a;return{lab:`${TEAMS[hw?g[1]:g[0]]} over ${TEAMS[hw?g[0]:g[1]]}`,date:g[2],hi:Math.max(a,h),lo:Math.min(a,h)}})
+   .sort((x,y)=>(y.hi-y.lo)-(x.hi-x.lo)).slice(0,10),mx=Math.max(...rows.map(r=>r.hi))||1;
+  document.getElementById('guide-sub').textContent=`${TEAMS[t]}'s model chance by result, ten biggest swings`;
+  document.getElementById('guide').innerHTML=rows.map(r=>`<div><span>${r.lab} <span style="color:var(--muted);font-size:12.5px">· ${r.date}</span></span>
+   <span class="bar" title="${pc(r.hi)} if it happens, ${pc(r.lo)} if not"><b style="width:${r.hi/mx*100}%"></b><i style="left:${r.lo/mx*100}%"></i><span class="num">${pc(r.hi)} / ${pc(r.lo)}</span></span></div>`).join('');
+}
+
+/* builder */
+const picks=REM.map(()=>null);
+const gamesEl=document.getElementById('games'),vEl=document.getElementById('verdict');
+function winOut(){picks.fill(null);left(cur).forEach(x=>picks[x.i]=x.g[1]===cur?1:0)}
+function drawGames(){
+  const mine=left(cur).map(x=>x.i),order=mine.concat(REM.map((g,i)=>i).filter(i=>!mine.includes(i)));
+  gamesEl.innerHTML=order.map((i,n)=>{const g=REM[i],h=DATA.ph[i];
+   return (n===0?`<div class="grp">${TEAMS[cur]}</div>`:n===mine.length?'<div class="grp">Rest of the SEC</div>':'')+
+   `<div class="game"><button type="button" data-g="${i}" data-s="0" aria-pressed="${picks[i]===0}">${TEAMS[g[0]]}<small class="num">${pc(1-h)}</small></button><span class="at">at</span><button type="button" data-g="${i}" data-s="1" aria-pressed="${picks[i]===1}">${TEAMS[g[1]]}<small class="num">${pc(h)}</small></button><span class="dt">${g[2]}</span></div>`}).join('');
+}
+gamesEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.g,s=+b.dataset.s;picks[i]=picks[i]===s?null:s;drawGames();evaluate()});
+let job=0;
+function evaluate(){
+  const my=++job,t=cur,name=TEAMS[t],und=picks.map((p,i)=>p===null?i:-1).filter(i=>i>=0);
+  const stat=r=>r.sel.includes(t)?'in':(r.und&&r.und.group.includes(t)?'margin':'out');
+  if(!und.length){
+    const log=[],r=titleGame(picks,log),st=stat(r),tone={in:'ok',margin:'warn',out:'bad'}[st];
+    const order=IDS.slice().sort((a,b)=>r.S.w[b]-r.S.w[a]).slice(0,8);if(!order.includes(t))order.push(t);
+    vEl.style.setProperty('--tone',`var(--${tone})`);
+    vEl.innerHTML=`<h3>${{in:name+' is in',margin:'Down to scoring margin',out:name+' is out'}[st]}</h3><p>${r.sel.length===2?'Title game: '+r.sel.map(x=>TEAMS[x]).join(' vs '):(r.sel.length?TEAMS[r.sel[0]]+' is in. ':'')+'The last spot is undecided after step D.'}</p>
+     ${log.length?'<ol>'+log.map(l=>'<li>'+l.replace(/\b[A-Z]{2,4}\b/g,m=>TEAMS[m]||m)+'</li>').join('')+'</ol>':'<p style="color:var(--muted)">No tiebreaker needed.</p>'}
+     <div class="stand">${order.map(x=>`<div class="${r.sel.includes(x)?'in':''} ${x===t?'me':''}"><span>${TEAMS[x]}</span><span class="num">${r.S.w[x]}-${r.S.l[x]}</span></div>`).join('')}</div>`;
+    return;
+  }
+  if(und.length===REM.length){const d=DATA.teams[t];show(d.c,d.mc,ALL,d.p,und.length);return}
+  const total=2**und.length;let m=0,inn=0,mar=0,pw=0;const p=picks.slice(),ph=DATA.ph;
+  vEl.style.setProperty('--tone','var(--accent)');
+  (function step(){
+    if(my!==job)return;const end=Math.min(total,m+5000);
+    for(;m<end;m++){let w=1;for(let k=0;k<und.length;k++){const b=m>>k&1;p[und[k]]=b;w*=b?ph[und[k]]:1-ph[und[k]]}
+      const r=titleGame(p);if(r.sel.includes(t)){inn++;pw+=w}else if(r.und&&r.und.group.includes(t))mar++}
+    if(m<total){vEl.innerHTML=`<h3>Calculating ${Math.round(100*m/total)}%</h3><p>${fmt(total)} combinations with ${und.length} games open.</p>`;setTimeout(step,0);return}
+    show(inn,mar,total,pw,und.length);
+  })();
+  function show(inn,mar,total,pw,n){
+    const tone=inn?(inn===total?'ok':'warn'):(mar?'warn':'bad');
+    vEl.style.setProperty('--tone',`var(--${tone})`);
+    vEl.innerHTML=`<h3>${inn?pc(pw)+' model chance':(mar?'Scoring margin only':name+' is out')}</h3>
+     <p class="num">${name} reaches the title game in <b>${fmt(inn)}</b> of ${fmt(total)} combinations of the ${n} open games${mar?`, with ${fmt(mar)} more decided by scoring margin`:''}.</p>
+     <p style="color:var(--muted)">Percentages under each team are SP+ win chances. Tap a selected team again to reopen that game.</p>`;
+  }
+}
+document.getElementById('reset').onclick=()=>{picks.fill(null);drawGames();evaluate()};
+document.getElementById('winout').onclick=()=>{winOut();drawGames();evaluate()};
+document.getElementById('chalk').onclick=()=>{DATA.ph.forEach((h,i)=>picks[i]=h>=.5?1:0);drawGames();evaluate()};
+
+/* select + animation */
+let flying=null;
+function select(t,animate){
+  if(flying){flying();}
+  cur=t;theme(t);drawPicker();drawTop(t);
+  const gone=dead(t);
+  ['s-paths','s-tree','s-guide'].forEach(id=>document.getElementById(id).hidden=gone);
+  if(!gone){drawPaths(t);drawTree(t);drawGuide(t)}
+  winOut();drawGames();evaluate();
+  if(!animate||matchMedia('(prefers-reduced-motion:reduce)').matches||!document.body.animate)return;
+  window.scrollTo(0,0);
+  const target=document.getElementById('herologo');target.style.visibility='hidden';
+  const ov=document.createElement('div');ov.className='ov';
+  ov.innerHTML=`<div class="ov-bg"></div><div class="ov-logo">${logo(t)}${gone?'<div class="stamp">Eliminated</div>':''}</div>${gone?`<p class="ov-q">In the SEC it just means more, it didn't mean enough to ${TEAMS[t]} this year.</p>`:''}`;
+  document.body.appendChild(ov);
+  const L=ov.querySelector('.ov-logo'),bg=ov.querySelector('.ov-bg'),q=ov.querySelector('.ov-q'),st=ov.querySelector('.stamp');
+  bg.animate([{opacity:0},{opacity:1}],{duration:220,fill:'both'});
+  L.animate([{transform:'scale(.12)',opacity:0},{transform:'scale(1.1)',opacity:1,offset:.7},{transform:'scale(1)',opacity:1}],{duration:520,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'});
+  if(gone){
+    st.animate([{transform:'rotate(-34deg) scale(3.6)',opacity:0},{transform:'rotate(-14deg) scale(.94)',opacity:1,offset:.85},{transform:'rotate(-14deg) scale(1)',opacity:1}],{duration:300,delay:420,easing:'cubic-bezier(.7,0,.9,.5)',fill:'both'});
+    setTimeout(()=>{if(ov.isConnected)ov.animate([{transform:'translate(0,0)'},{transform:'translate(-7px,5px)'},{transform:'translate(6px,-4px)'},{transform:'translate(-3px,2px)'},{transform:'translate(0,0)'}],{duration:240})},700);
+    q.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:420,delay:900,fill:'both'});
+  }
+  let done=false;
+  const fly=()=>{
+    if(done)return;done=true;clearTimeout(timer);
+    const a=L.getBoundingClientRect(),b=target.getBoundingClientRect(),s=b.width/a.width;
+    const dx=b.left+b.width/2-(a.left+a.width/2),dy=b.top+b.height/2-(a.top+a.height/2);
+    bg.animate([{opacity:1},{opacity:0}],{duration:520,fill:'forwards'});
+    if(q)q.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});
+    const an=L.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${dx}px,${dy}px) scale(${s})`}],{duration:620,easing:'cubic-bezier(.5,0,.2,1)',fill:'forwards'});
+    const end=()=>{target.style.visibility='';ov.remove();flying=null};
+    an.onfinish=end;flying=()=>{an.cancel();end()};
+  };
+  const timer=setTimeout(fly,gone?3600:950);
+  ov.addEventListener('click',fly);
+  flying=()=>{done=true;clearTimeout(timer);target.style.visibility='';ov.remove();flying=null};
+}
+select('OU',false);
+</script>
+</body>
+</html>

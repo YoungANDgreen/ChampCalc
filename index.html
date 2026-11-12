@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oklahoma Sooners – 2026 SEC Championship Mathematical Paths</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: one scrolling column. school picker, scoreboard header, top-5 paths, tree, builder, standings */
+  color-scheme:dark;
+  --brand:#a51d24; --brand-hi:#d4424a; --accent:#dcb65f; --on-brand:#f4ecd9;
+  --cream:#f4ecd9; --muted:#bdb1a6;
+  --bg:color-mix(in srgb,var(--brand) 9%,#0d0b0b);
+  --panel:color-mix(in srgb,var(--brand) 13%,#181515);
+  --panel-2:color-mix(in srgb,var(--brand) 20%,#1e1a1a);
+  --line:color-mix(in srgb,var(--brand-hi) 30%,#2c2828);
+  --ok:#56c283; --warn:#ecc44c; --bad:#f06464;
+  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--cream);font:400 16px/1.5 var(--body);transition:background-color .5s;
+  background-image:radial-gradient(900px 440px at 50% -120px,color-mix(in srgb,var(--brand) 55%,transparent),transparent 70%)}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+a{color:var(--accent)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* logos */
+.logo{position:relative;display:inline-grid;place-items:center;border-radius:50%;background:#f6f1e6;flex:none;width:var(--sz,40px);height:var(--sz,40px);
+  box-shadow:0 0 0 2px var(--lb,var(--brand-hi))}
+.logo img{width:78%;height:78%;object-fit:contain;display:block}
+.logo b{display:none;font:700 calc(var(--sz,40px)*.3)/1 var(--display);letter-spacing:.03em;color:var(--lo,#fff)}
+.logo.nologo{background:var(--lb,var(--brand))}
+.logo.nologo img{display:none}.logo.nologo b{display:block}
+
+/* picker */
+.picker{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;padding-top:16px}
+.chip{display:grid;justify-items:center;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 2px 6px;cursor:pointer;transition:transform .15s,border-color .15s}
+.chip:hover{transform:translateY(-2px);border-color:var(--accent)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--panel-2);box-shadow:inset 0 -3px 0 var(--accent)}
+.chip span{font:600 13px/1 var(--display);letter-spacing:.08em}
+.chip small{font-size:11.5px;color:var(--muted);line-height:1}
+.chip.dead{opacity:.62}.chip.dead small{color:var(--bad)}
+
+/* header */
+header.top{padding:22px 0 0}
+.hero{display:flex;gap:16px;align-items:center}
+.hero .logo{--sz:92px}
+.herologo{position:relative;flex:none}
+.eyebrow{font:600 13px/1.2 var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:clamp(28px,6vw,48px);line-height:1.02;text-transform:uppercase;margin-top:8px}
+h1 span{color:var(--brand-hi)}
+.lede{color:var(--muted);max-width:66ch;margin:12px 0 0}
+.badge{display:inline-flex;align-items:center;gap:8px;font:700 13px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;
+  padding:7px 11px;border-radius:4px;background:var(--brand);color:var(--on-brand);border:1px solid var(--brand-hi)}
+.badge i{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+.yard{height:14px;margin:22px 0 0;border-top:2px solid var(--accent);border-bottom:1px solid var(--line);
+  background:repeating-linear-gradient(90deg,transparent 0 18px,rgba(244,236,217,.28) 18px 19px)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.tile b{display:block;font:700 clamp(26px,6vw,38px)/1 var(--display);color:var(--accent)}
+.tile span{display:block;font-size:13px;color:var(--muted);margin-top:6px;line-height:1.35}
+.wins{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.wins div{flex:1 1 150px;background:var(--panel-2);border-left:3px solid var(--brand-hi);border-radius:4px;padding:8px 10px;font-size:14px}
+.wins small{display:block;color:var(--muted);font:600 11px/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase}
+.quote{font:600 clamp(20px,4.4vw,28px)/1.2 var(--display);color:var(--cream);margin:14px 0 0;max-width:30ch;text-wrap:balance}
+
+/* stamp */
+.stamp{position:absolute;left:50%;top:50%;translate:-50% -50%;transform:rotate(-14deg);white-space:nowrap;pointer-events:none;
+  font:700 calc(var(--sz,92px)*.2)/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:#e0262b;
+  border:calc(var(--sz,92px)*.03) double #e0262b;border-radius:calc(var(--sz,92px)*.04);padding:.28em .5em .22em;background:rgba(255,255,255,.72);
+  -webkit-mask-image:radial-gradient(circle at 30% 40%,#000 0 55%,rgba(0,0,0,.75) 56% 100%),repeating-linear-gradient(115deg,#000 0 7px,rgba(0,0,0,.82) 7px 9px);
+  -webkit-mask-composite:source-in;mask-composite:intersect;
+  text-shadow:0 0 1px #e0262b}
+.ov{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:20px;cursor:pointer}
+.ov-bg{position:absolute;inset:0;background:rgba(6,4,4,.86);backdrop-filter:blur(3px)}
+.ov-logo{position:relative;--sz:min(62vw,300px)}
+.ov-logo .logo{box-shadow:0 0 0 6px var(--brand-hi),0 30px 80px rgba(0,0,0,.6)}
+.ov-logo .stamp{font-size:calc(var(--sz)*.13)}
+.herologo .stamp{font-size:calc(var(--sz)*.17)}
+.ov-q{position:relative;margin:0;text-align:center;font:600 clamp(20px,5vw,30px)/1.2 var(--display);max-width:24ch;text-wrap:balance;color:#f4ecd9}
+
+section{margin-top:40px}
+h2{font-size:26px;text-transform:uppercase;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2 small{font:500 14px/1.3 var(--body);color:var(--muted);text-transform:none;letter-spacing:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:10px 0 14px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:var(--tone)}
+.t-ok{--tone:var(--ok)} .t-warn{--tone:var(--warn)} .t-bad{--tone:var(--bad)} .t-info{--tone:var(--accent)}
+
+/* top paths */
+.paths{display:grid;gap:10px;margin-top:12px}
+.path{display:grid;grid-template-columns:auto 1fr;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.path .rk{font:700 34px/1 var(--display);color:var(--accent);min-width:28px}
+.path h3{font-size:20px;text-transform:uppercase;line-height:1.15}
+.path p{margin:4px 0 0;font-size:14px;color:var(--muted)}
+.path .pr{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:13.5px}
+.path .pr b{color:var(--accent);font:700 17px/1 var(--display)}
+.must{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.must span{font-size:12.5px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:4px;padding:3px 7px}
+.must span i{color:var(--muted);font-style:normal}
+
+/* tree */
+.node{position:relative}
+.node>button{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--tone);border-radius:8px;padding:12px;transition:background .2s,border-color .2s}
+.node>button:hover{background:var(--panel-2);border-color:var(--tone)}
+.node>button[aria-expanded="true"]{background:var(--panel-2)}
+.node.leaf>button{cursor:default}
+.mark{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 14px/1 var(--display);
+  background:color-mix(in srgb,var(--tone) 18%,transparent);color:var(--tone);border:1px solid var(--tone);margin-top:1px}
+.nt{font:600 19px/1.15 var(--display);letter-spacing:.02em;text-transform:uppercase}
+.ns{display:block;color:var(--muted);font-size:14px;line-height:1.4;margin-top:4px}
+.chev{font-size:13px;color:var(--muted);transition:transform .3s;margin-top:4px}
+button[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.meter{display:block;margin-top:9px}
+.meter em{display:block;height:6px;border-radius:3px;background:rgba(244,236,217,.1);overflow:hidden}
+.meter em b{display:block;height:100%;background:var(--tone);border-radius:3px}
+.meter span{display:block;font-size:12.5px;color:var(--muted);margin-top:4px}
+.pill{display:inline-block;font:700 11px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;padding:4px 7px;border-radius:3px;
+  color:var(--tone);border:1px solid var(--tone);margin-left:8px;vertical-align:2px;white-space:nowrap}
+.fold{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s cubic-bezier(.2,.7,.2,1)}
+.fold.open{grid-template-rows:1fr}
+.fold>div{overflow:hidden;min-height:0}
+.kids{position:relative;margin:0 0 0 13px;padding:12px 0 2px 18px;display:grid;gap:10px}
+.kids::before{content:"";position:absolute;left:0;top:0;bottom:14px;width:2px;
+  background:repeating-linear-gradient(180deg,var(--accent) 0 6px,transparent 6px 14px);background-size:2px 14px;animation:flow 1s linear infinite;opacity:.7}
+.kids>.node::before{content:"";position:absolute;left:-18px;top:24px;width:16px;height:2px;background:var(--accent);opacity:.55}
+@keyframes flow{to{background-position:0 14px}}
+.detail{background:rgba(0,0,0,.22);border:1px dashed var(--line);border-radius:8px;padding:12px 14px;font-size:14.5px}
+.detail p{margin:0 0 8px}.detail p:last-child{margin-bottom:0}
+.rows{display:grid;gap:5px;margin-top:8px}
+.rows div{display:grid;grid-template-columns:minmax(92px,auto) 1fr auto;gap:10px;align-items:center;font-size:13.5px}
+.rows em{height:6px;border-radius:3px;background:rgba(244,236,217,.1);overflow:hidden;display:block}
+.rows em b{display:block;height:100%;background:var(--tone,var(--accent))}
+[data-tip]{position:relative;border-bottom:1px dotted var(--accent);cursor:help}
+[data-tip]:hover::after,[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:min(270px,72vw);
+  background:#0c0808;border:1px solid var(--accent);border-radius:6px;padding:8px 10px;font:400 13px/1.4 var(--body);color:var(--cream);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.btn{background:transparent;border:1px solid var(--line);border-radius:6px;padding:7px 12px;font:600 14px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.empty{background:var(--panel);border:1px dashed var(--bad);border-radius:8px;padding:16px;color:var(--muted)}
+
+/* builder */
+.builder{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+.games{display:grid;gap:6px}
+.grp{font:600 12px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:10px 0 2px}
+.game{display:grid;grid-template-columns:1fr auto 1fr auto;gap:6px;align-items:center}
+.game button{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 8px;cursor:pointer;font:600 15px/1.1 var(--display);letter-spacing:.04em;text-transform:uppercase;min-height:40px;transition:background .15s,border-color .15s}
+.game button:hover{border-color:var(--accent)}
+.game button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand);border-color:var(--brand-hi)}
+.game button small{display:block;font:500 11px/1.2 var(--body);letter-spacing:0;opacity:.7;text-transform:none}
+.game .at{color:var(--muted);font-size:12px}
+.game .dt{color:var(--muted);font-size:12px;width:44px;text-align:right}
+.verdict{position:sticky;top:12px;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--tone,var(--accent));border-radius:8px;padding:14px}
+.verdict h3{font-size:24px;text-transform:uppercase;color:var(--tone,var(--accent))}
+.verdict p{margin:6px 0 0;font-size:14.5px}
+.verdict ol{margin:8px 0 0;padding-left:20px;font-size:13.5px;color:var(--muted)}
+.stand{margin-top:10px;display:grid;gap:3px;font-size:14px}
+.stand div{display:flex;justify-content:space-between;padding:3px 8px;border-radius:4px}
+.stand .in{background:rgba(86,194,131,.16);color:var(--ok);font-weight:600}
+.stand .me{outline:1px solid var(--brand-hi)}
+
+/* standings */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+th{font:600 12px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px;background:var(--panel)}
+td{padding:7px 10px;border-top:1px solid var(--line);vertical-align:middle}
+tr.row{cursor:pointer}tr.row:hover td{background:var(--panel)}
+tr.sel td{background:var(--panel-2)}
+td.tm{display:flex;gap:9px;align-items:center;font-weight:600}
+td .logo{--sz:28px}
+td.r,th.r{text-align:right}
+.guide{display:grid;gap:6px;margin-top:12px}
+.guide div{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center;font-size:14px}
+.guide .bar{position:relative;height:18px;border-radius:3px;background:rgba(244,236,217,.08)}
+.guide .bar b{position:absolute;left:0;top:0;bottom:0;background:var(--ok);border-radius:3px;opacity:.8}
+.guide .bar i{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--bad)}
+.guide .bar span{position:absolute;right:5px;top:0;font:600 12px/18px var(--body);text-shadow:0 1px 2px #000}
+details{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 14px}
+summary{cursor:pointer;font:600 20px/1.2 var(--display);text-transform:uppercase;letter-spacing:.03em;padding:13px 0;list-style:none;display:flex;justify-content:space-between}
+summary::after{content:"+";color:var(--accent);font-size:22px;line-height:1}
+details[open] summary::after{content:"–"}
+details ol{margin:0;padding:0 0 14px 22px}
+details li{margin:6px 0}
+details li b{color:var(--accent)}
+.note{background:linear-gradient(90deg,color-mix(in srgb,var(--brand) 45%,transparent),color-mix(in srgb,var(--brand) 10%,transparent));border:1px solid var(--brand-hi);border-radius:8px;padding:16px}
+.note h3{font-size:24px;text-transform:uppercase;color:var(--accent)}
+.note p{margin:8px 0 0;max-width:70ch}
+footer{margin-top:28px;font-size:13px;color:var(--muted)}
+footer p{margin:6px 0;max-width:80ch}
+[hidden]{display:none!important}
+@media (max-width:760px){
+  .picker{grid-template-columns:repeat(4,1fr)}
+  .hero{gap:12px}.hero .logo{--sz:68px}
+  .builder{grid-template-columns:1fr}.verdict{position:static;order:-1}
+  .tiles{grid-template-columns:1fr}.tile{display:grid;grid-template-columns:minmax(86px,auto) 1fr;gap:12px;align-items:center}.tile span{margin:0}
+  .kids{margin-left:6px;padding-left:14px}.kids>.node::before{left:-14px;width:12px}
+  .node>button{gap:9px;padding:11px 10px}.nt{font-size:17.5px}
+  .guide div{grid-template-columns:1fr 110px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="picker" id="picker" aria-label="Pick a school"></nav>
+<header class="top" id="top"></header>
+
+<section id="s-paths">
+  <h2>Five most likely paths <small>Ranked by SP+ win probabilities</small></h2>
+  <div class="paths" id="paths"></div>
+</section>
+
+<section id="s-tree">
+  <h2>The path tree <small>Tap a node to open its branches</small></h2>
+  <div class="legend">
+    <span class="t-ok"><i class="dot"></i>Viable path</span>
+    <span class="t-warn"><i class="dot"></i>Requires tiebreaker</span>
+    <span class="t-bad"><i class="dot"></i>Eliminated</span>
+    <span><span data-tip="One combination is one full set of winners for the 20 remaining SEC games. Counts treat every game as a coin flip. Model chance weights each game by SP+ instead." tabindex="0">Combinations vs model chance</span></span>
+  </div>
+  <div class="toolbar"><button class="btn" id="expand">Expand all</button><button class="btn" id="collapse">Collapse all</button></div>
+  <div id="tree"></div>
+</section>
+
+<section>
+  <h2>Scenario builder <small>Pick winners and the tiebreaker runs live</small></h2>
+  <div class="toolbar"><button class="btn" id="winout">Selected school wins out</button><button class="btn" id="chalk">Pick all favorites</button><button class="btn" id="reset">Clear all</button></div>
+  <div class="builder">
+    <div class="games" id="games"></div>
+    <div class="verdict" id="verdict" aria-live="polite"></div>
+  </div>
+</section>
+
+<section id="s-guide">
+  <h2>Rooting guide <small id="guide-sub"></small></h2>
+  <div class="legend"><span class="t-ok"><i class="dot"></i>Title-game chance if the listed team wins</span><span class="t-bad"><i class="dot"></i>If it loses</span></div>
+  <div class="guide" id="guide"></div>
+</section>
+
+<section>
+  <h2>All 16 teams <small>Tap a row to switch schools</small></h2>
+  <div class="tbl"><table id="table"></table></div>
+</section>
+
+<section>
+  <details>
+    <summary>Official SEC tiebreaker order</summary>
+    <ol type="A">
+      <li><b>Head-to-head</b> among the tied teams. In a tie of three or more where not everyone played everyone, a team advances only by beating all the others, and is dropped only by losing to all of them.</li>
+      <li><b>Record against common conference opponents</b>, meaning opponents every tied team played.</li>
+      <li><b>Record against the highest-placed common opponent</b>, then the next one down the standings until something separates.</li>
+      <li><b>Combined conference winning percentage of each team's SEC opponents.</b></li>
+      <li><b>Capped relative scoring margin</b> across conference games, measured against each opponent's season scoring averages.</li>
+      <li><b>Random draw.</b></li>
+    </ol>
+    <p style="margin:0 0 14px;color:var(--muted);font-size:14px">When a step lifts one team clear, that team is in and the others restart at step A. When a step drops teams below a top group that is still too large, the dropped teams are out and the top group restarts. Two teams tied alone for first both go. The league office has the final say on interpretation.</p>
+  </details>
+</section>
+
+<section><div class="note" id="note"></div></section>
+
+<footer>
+  <p>Method: results and remaining schedules through Nov 7, 2026. All 1,048,576 outcomes of the last 20 SEC games are run through tiebreaker steps A to D, with tied common opponents in step C treated as one group. Ties that survive step D count as scoring-margin cases, not as in or out.</p>
+  <p>Model chance: each game's win probability comes from ESPN SP+ ratings dated Nov 8, 2026, with 2.5 points of home field and a 16.5-point standard deviation. That conversion is this page's assumption, not ESPN's.</p>
+  <p>Logos load from ESPN's image server. Where a viewer blocks outside images, each school shows a lettered badge instead.</p>
+  <p>Sources: <a href="https://therebelwalk.com/2026/11/sec-football-standings-week-10-georgia-ole-miss/">The Rebel Walk standings and schedules</a> · <a href="https://sports.yahoo.com/articles/2026-sec-football-power-rankings-040936999.html">Yahoo Sports results</a> · <a href="https://www.espn.com/college-football/story/_/id/49868647/2026-college-football-sp+-rankings-all-138-fbs-teams">ESPN SP+ ratings</a> · <a href="https://collegefootballnetwork.com/wp-content/uploads/2024/11/SEC-Tiebreaking-Procedures.pdf">SEC tiebreaking procedures (PDF)</a></p>
+</footer>
+</div>
+
+<script>
+const DATA={"ph":[0.4231,0.5482,0.6947,0.8884,0.1801,0.09423,0.9127,0.6168,0.684,0.5458,0.9636,0.2207,0.2783,0.5024,0.1186,0.1849,0.0729,0.584,0.7257,0.7702],"sp":{"UGA":31.3,"ALA":22.7,"UK":8.3,"TEX":23.5,"TENN":20.5,"MISS":13.5,"SC":13.7,"LSU":22.9,"MIZ":13.7,"OU":7.8,"FLA":5.9,"AUB":2.8,"MSST":3.8,"ARK":-3.6,"TAMU":8.3,"VAN":-1.5},"teams":{"UGA":{"p":0.9412,"c":856810,"mp":0.002731,"mc":6911,"rec":{"6":{"t":262144,"tp":0.02009,"i":95038,"ip":0.001292,"m":5327,"b":{"0":{"t":112896,"i":63834,"ip":0.0003329,"m":4110,"s":{"1":[368,368],"2":[4128,4128],"3":[12758,16728],"4":[20418,32888],"5":[16967,34240],"6":[7453,18896],"7":[1607,5096],"8":[135,536],"9":[0,16]}},"1":{"t":107520,"i":31204,"ip":0.0009591,"m":1217,"s":{"1":[1544,1544],"2":[6932,11240],"3":[11169,29704],"4":[6978,36568],"5":[3630,22008],"6":[867,5944],"7":[84,504],"8":[0,8]}},"2":{"t":41728,"i":0,"ip":0,"m":0,"s":{"1":[0,2680],"2":[0,10712],"3":[0,15552],"4":[0,10000],"5":[0,2632],"6":[0,152]}}}},"7":{"t":524288,"tp":0.2515,"i":499628,"ip":0.2114,"m":1584,"b":{"0":{"t":524288,"i":499628,"ip":0.2114,"m":1584,"s":{"1":[225792,225792],"2":[215040,215040],"3":[53944,72704],"4":[4810,10240],"5":[42,512]}}}},"8":{"t":262144,"tp":0.7285,"i":262144,"ip":0.7285,"m":0,"b":{"0":{"t":262144,"i":262144,"ip":0.7285,"m":0,"s":{"1":[262144,262144]}}}}},"lev":[[0.9426,0.9393],[0.936,0.9454],[0.9411,0.9412],[0.7259,0.9682],[0.9856,0.7388],[0.938,0.9717],[0.9718,0.9383],[0.9727,0.9216],[0.8782,0.9703],[0.9317,0.9491],[0.9509,0.9408],[0.939,0.949],[0.9365,0.9533],[0.9533,0.9292],[0.9391,0.957],[0.9412,0.9411],[0.9405,0.9506],[0.945,0.9385],[0.9418,0.941],[0.938,0.9421]],"paths":[{"w":8,"above":[],"tied":[],"prob":0.7285,"g":[[3,1,1],[4,0,1],[5,0,0.9058],[6,1,0.9127],[10,1,0.9636],[14,0,0.8814],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":[],"tied":["ALA"],"prob":0.07504,"g":[[5,0,1],[6,1,1],[8,1,0.8496],[9,1,0.8283],[10,1,0.9447],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":[],"tied":["ALA","TEX"],"prob":0.03766,"g":[[5,0,1],[6,1,1],[8,1,0.8465],[9,0,1],[10,1,1],[11,0,1],[14,0,0.8204],[15,0,0.8249],[16,0,0.9254]]},{"w":7,"above":[],"tied":["ALA","TENN"],"prob":0.03524,"g":[[5,0,1],[6,1,1],[8,1,0.8496],[9,1,0.8283],[10,1,0.9447],[12,0,1],[13,1,1],[14,0,1],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":[],"tied":[],"prob":0.01573,"g":[[8,1,0.8496],[9,1,0.8283],[10,1,0.9447],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]}]},"ALA":{"p":0.5333,"c":381752,"mp":0.002205,"mc":5090,"rec":{"5":{"t":262144,"tp":0.008226,"i":778,"ip":4.796e-7,"m":42,"b":{"1":{"t":3864,"i":778,"ip":4.796e-7,"m":42,"s":{"4":[6,9],"5":[58,96],"6":[167,414],"7":[266,934],"8":[215,1189],"9":[66,854],"10":[0,320],"11":[0,48]}},"2":{"t":258280,"i":0,"ip":0,"m":0,"s":{"1":[0,2108],"2":[0,13084],"3":[0,36160],"4":[0,59015],"5":[0,63560],"6":[0,47626],"7":[0,25226],"8":[0,9195],"9":[0,2086],"10":[0,220]}}}},"6":{"t":524288,"tp":0.1651,"i":151868,"ip":0.02702,"m":4058,"b":{"0":{"t":75264,"i":35385,"ip":0.0006688,"m":2881,"s":{"2":[736,736],"3":[2622,6784],"4":[9803,19888],"5":[12401,26000],"6":[7466,16480],"7":[2097,4832],"8":[252,528],"9":[8,16]}},"1":{"t":272384,"i":116483,"ip":0.02635,"m":1177,"s":{"1":[6992,6992],"2":[24126,42880],"3":[33816,91504],"4":[32780,85792],"5":[15844,37712],"6":[2772,7136],"7":[153,368]}},"2":{"t":176640,"i":0,"ip":0,"m":0,"s":{"1":[0,21872],"2":[0,63056],"3":[0,62208],"4":[0,25568],"5":[0,3856],"6":[0,80]}}}},"7":{"t":262144,"tp":0.8267,"i":229106,"ip":0.5063,"m":990,"b":{"0":{"t":196608,"i":178022,"ip":0.1728,"m":986,"s":{"1":[37632,37632],"2":[98560,98560],"3":[33650,50944],"4":[7720,8960],"5":[460,512]}},"1":{"t":65536,"i":51084,"ip":0.3335,"m":4,"s":{"1":[37632,37632],"2":[12544,23296],"3":[668,4352],"4":[240,256]}}}}},"lev":[[0.5311,0.5363],[0.5505,0.5191],[0.5316,0.5341],[0.6478,0.5189],[0.4974,0.6967],[0.5742,0.1406],[0.1578,0.5692],[0.5111,0.5471],[0.549,0.5261],[0.431,0.6184],[0.6067,0.5305],[0.5076,0.624],[0.4927,0.6386],[0.6433,0.4244],[0.5219,0.6179],[0.5395,0.5059],[0.5358,0.5018],[0.5303,0.5355],[0.5487,0.5275],[0.5544,0.527]],"paths":[{"w":7,"above":["UGA"],"tied":[],"prob":0.2174,"g":[[3,1,1],[4,0,1],[5,0,1],[6,1,1],[8,1,0.8496],[9,1,0.8283],[10,1,0.9447],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":[],"tied":["UGA"],"prob":0.07504,"g":[[5,0,1],[6,1,1],[8,1,0.8496],[9,1,0.8283],[10,1,0.9447],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":["UGA"],"tied":["UK"],"prob":0.05263,"g":[[3,1,1],[4,0,1],[5,0,1],[6,1,1],[7,1,1],[8,0,1],[9,1,0.8283],[10,1,0.9447],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":["UGA"],"tied":["TEX","TENN"],"prob":0.05072,"g":[[3,1,1],[4,0,1],[5,0,1],[6,1,1],[8,1,0.8443],[9,0,1],[10,1,1],[11,0,1],[12,0,1],[13,1,1],[14,0,1],[15,0,0.8455],[16,0,0.9363]]},{"w":7,"above":[],"tied":["UGA","TEX"],"prob":0.02751,"g":[[5,0,1],[6,1,1],[8,1,0.8166],[9,0,1],[10,1,1],[11,0,1],[14,0,0.8584],[15,0,0.8613],[16,0,0.963]]}]},"UK":{"p":0.06112,"c":309556,"mp":0.0008769,"mc":8609,"rec":{"5":{"t":262144,"tp":0.2621,"i":18,"ip":2.7e-10,"m":23,"b":{"1":{"t":3864,"i":18,"ip":2.7e-10,"m":23,"s":{"4":[0,9],"5":[0,96],"6":[0,414],"7":[2,934],"8":[6,1189],"9":[7,854],"10":[3,320],"11":[0,48]}},"2":{"t":258280,"i":0,"ip":0,"m":0,"s":{"1":[0,1700],"2":[0,11100],"3":[0,32448],"4":[0,56231],"5":[0,64344],"6":[0,50986],"7":[0,28234],"8":[0,10571],"9":[0,2414],"10":[0,252]}}}},"6":{"t":524288,"tp":0.543,"i":95722,"ip":0.006127,"m":7400,"b":{"0":{"t":75264,"i":48994,"ip":0.0007606,"m":3202,"s":{"2":[1288,1288],"3":[7243,8192],"4":[11781,20296],"5":[15160,24800],"6":[10045,15528],"7":[3095,4624],"8":[369,520],"9":[13,16]}},"1":{"t":272384,"i":46728,"ip":0.005367,"m":4198,"s":{"1":[8096,8096],"2":[12995,44424],"3":[9382,89616],"4":[8768,83592],"5":[5363,38096],"6":[1885,7976],"7":[231,576],"8":[8,8]}},"2":{"t":176640,"i":0,"ip":0,"m":0,"s":{"1":[0,20768],"2":[0,60960],"3":[0,62688],"4":[0,27360],"5":[0,4672],"6":[0,192]}}}},"7":{"t":262144,"tp":0.1949,"i":213816,"ip":0.05499,"m":1186,"b":{"0":{"t":196608,"i":170772,"ip":0.0377,"m":1186,"s":{"1":[37632,37632],"2":[98560,98560],"3":[29610,50944],"4":[4852,8960],"5":[118,512]}},"1":{"t":65536,"i":43044,"ip":0.0173,"m":0,"s":{"1":[37632,37632],"2":[5376,23296],"3":[36,4352],"4":[0,256]}}}}},"lev":[[0.05638,0.06758],[0.05641,0.065],[0.06036,0.06145],[0.171,0.04732],[0.03669,0.1724],[0.04958,0.172],[0.1573,0.05192],[0.003287,0.09706],[0.178,0.007117],[0.05133,0.06926],[0.06622,0.06093],[0.05882,0.06924],[0.05684,0.07222],[0.07199,0.05035],[0.05989,0.07026],[0.06216,0.05654],[0.0616,0.05497],[0.05949,0.06228],[0.05514,0.06338],[0.05671,0.06244]],"paths":[{"w":7,"above":[],"tied":["UGA","ALA"],"prob":0.01479,"g":[[5,0,1],[6,1,1],[7,1,1],[8,0,1],[9,1,0.8294],[10,1,0.9462],[14,0,0.8271],[15,0,0.8166],[16,0,0.9303],[19,1,0.8031]]},{"w":7,"above":["UGA"],"tied":[],"prob":0.01103,"g":[[3,1,1],[4,0,1],[7,1,1],[8,0,1],[9,1,0.8283],[10,1,0.9447],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":[],"tied":["UGA","ALA","TENN"],"prob":0.006957,"g":[[5,0,1],[6,1,1],[7,1,1],[8,0,1],[9,1,0.8292],[10,1,0.9459],[12,0,1],[13,1,1],[14,0,1],[15,0,0.816],[16,0,0.9298],[19,1,0.8034]]},{"w":7,"above":["UGA"],"tied":["TEX"],"prob":0.00571,"g":[[3,1,1],[4,0,1],[7,1,1],[8,0,1],[9,0,1],[10,1,1],[11,0,1],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":[],"tied":["UGA","ALA","TEX"],"prob":0.004016,"g":[[3,0,0.809],[4,0,0.809],[5,0,1],[6,1,1],[7,1,1],[8,0,1],[9,0,1],[10,1,1],[11,0,1],[14,0,0.839],[15,0,0.829],[16,0,0.946],[19,1,0.8051]]}]},"TEX":{"p":0.2072,"c":138735,"mp":0.002754,"mc":1373,"rec":{"4":{"t":131072,"tp":0.004387,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,2280],"2":[0,11152],"3":[0,24122],"4":[0,31306],"5":[0,28096],"6":[0,18880],"7":[0,9812],"8":[0,3940],"9":[0,1192],"10":[0,256],"11":[0,34],"12":[0,2]}}}},"5":{"t":393216,"tp":0.1352,"i":2,"ip":1.603e-10,"m":0,"b":{"1":{"t":3024,"i":2,"ip":1.603e-10,"m":0,"s":{"4":[0,3],"5":[1,47],"6":[1,254],"7":[0,668],"8":[0,953],"9":[0,749],"10":[0,302],"11":[0,48]}},"2":{"t":390192,"i":0,"ip":0,"m":0,"s":{"1":[0,5580],"2":[0,29572],"3":[0,69312],"4":[0,96109],"5":[0,89241],"6":[0,59290],"7":[0,28820],"8":[0,9911],"9":[0,2143],"10":[0,214]}}}},"6":{"t":393216,"tp":0.5193,"i":41097,"ip":0.00201,"m":891,"b":{"0":{"t":48384,"i":4322,"ip":0.00002407,"m":506,"s":{"2":[336,336],"3":[1266,3344],"4":[1798,11128],"5":[816,16720],"6":[104,12240],"7":[2,4112],"8":[0,488],"9":[0,16]}},"1":{"t":184320,"i":36775,"ip":0.001986,"m":385,"s":{"1":[3192,3192],"2":[11393,22120],"3":[18205,55552],"4":[3941,62504],"5":[44,32968],"6":[0,7464],"7":[0,512],"8":[0,8]}},"2":{"t":160512,"i":0,"ip":0,"m":0,"s":{"1":[0,15816],"2":[0,51672],"3":[0,59296],"4":[0,28464],"5":[0,5080],"6":[0,184]}}}},"7":{"t":131072,"tp":0.341,"i":97636,"ip":0.2052,"m":482,"b":{"0":{"t":98304,"i":71980,"ip":0.02884,"m":478,"s":{"1":[16128,16128],"2":[45312,45312],"3":[9984,29440],"4":[556,6912],"5":[0,512]}},"1":{"t":32768,"i":25656,"ip":0.1763,"m":4,"s":{"1":[16128,16128],"2":[7680,13056],"3":[1848,3328],"4":[0,256]}}}}},"lev":[[0.2063,0.2083],[0.1981,0.2147],[0.2065,0.2074],[0.1568,0.2135],[0.2308,0.0994],[0.1997,0.2789],[0.2789,0.2003],[0.2344,0.1902],[0.1704,0.2241],[0.4551,0.0009067],[0.01275,0.2145],[0.2645,0.004759],[0.1794,0.279],[0.2769,0.1381],[0.1963,0.2876],[0.203,0.2255],[0.2055,0.229],[0.2085,0.2062],[0.1981,0.2106],[0.1995,0.2095]],"paths":[{"w":7,"above":["UGA"],"tied":["ALA"],"prob":0.1125,"g":[[3,1,1],[4,0,1],[5,0,1],[6,1,1],[8,1,0.8496],[9,0,1],[10,1,1],[11,0,1],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":["UGA"],"tied":["ALA","UK"],"prob":0.02724,"g":[[3,1,1],[4,0,1],[5,0,1],[6,1,1],[7,1,1],[8,0,1],[9,0,1],[10,1,1],[11,0,1],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":["UGA"],"tied":[],"prob":0.02358,"g":[[3,1,1],[4,0,1],[8,1,0.8496],[9,0,1],[10,1,1],[11,0,1],[14,0,0.8256],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":["UGA"],"tied":["TENN"],"prob":0.01108,"g":[[3,1,1],[4,0,1],[8,1,0.8496],[9,0,1],[10,1,1],[11,0,1],[12,0,1],[13,1,1],[14,0,1],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":[],"tied":["UGA","ALA"],"prob":0.0107,"g":[[1,1,0.8343],[5,0,1],[6,1,1],[8,1,0.9197],[9,0,1],[10,1,1],[11,0,1],[16,0,0.8316],[18,1,0.8431],[19,1,0.9363]]}]},"TENN":{"p":0.2232,"c":196320,"mp":0.001444,"mc":3930,"rec":{"4":{"t":131072,"tp":0.01643,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,2055],"2":[0,10552],"3":[0,23923],"4":[0,32114],"5":[0,29022],"6":[0,19032],"7":[0,9454],"8":[0,3612],"9":[0,1051],"10":[0,224],"11":[0,31],"12":[0,2]}}}},"5":{"t":393216,"tp":0.1812,"i":8,"ip":3.639e-10,"m":7,"b":{"1":{"t":3024,"i":8,"ip":3.639e-10,"m":7,"s":{"4":[0,3],"5":[2,47],"6":[4,254],"7":[0,668],"8":[1,953],"9":[1,749],"10":[0,302],"11":[0,48]}},"2":{"t":390192,"i":0,"ip":0,"m":0,"s":{"1":[0,5580],"2":[0,29572],"3":[0,69312],"4":[0,96109],"5":[0,89241],"6":[0,59290],"7":[0,28820],"8":[0,9911],"9":[0,2143],"10":[0,214]}}}},"6":{"t":393216,"tp":0.4828,"i":76358,"ip":0.005784,"m":3457,"b":{"0":{"t":48384,"i":12932,"ip":0.00005189,"m":1722,"s":{"2":[336,336],"3":[2121,3344],"4":[4691,11128],"5":[3652,16720],"6":[1625,12240],"7":[441,4112],"8":[65,488],"9":[1,16]}},"1":{"t":184320,"i":63426,"ip":0.005732,"m":1735,"s":{"1":[3192,3192],"2":[15183,22120],"3":[27124,55552],"4":[14924,62504],"5":[2645,32968],"6":[333,7464],"7":[25,512],"8":[0,8]}},"2":{"t":160512,"i":0,"ip":0,"m":0,"s":{"1":[0,15816],"2":[0,51672],"3":[0,59296],"4":[0,28464],"5":[0,5080],"6":[0,184]}}}},"7":{"t":131072,"tp":0.3196,"i":119954,"ip":0.2174,"m":466,"b":{"0":{"t":98304,"i":90494,"ip":0.06163,"m":462,"s":{"1":[16128,16128],"2":[45312,45312],"3":[26272,29440],"4":[2406,6912],"5":[376,512]}},"1":{"t":32768,"i":29460,"ip":0.1558,"m":4,"s":{"1":[16128,16128],"2":[10752,13056],"3":[2564,3328],"4":[16,256]}}}}},"lev":[[0.2212,0.2258],[0.2304,0.2172],[0.2221,0.2237],[0.2146,0.2243],[0.2177,0.2482],[0.2184,0.2688],[0.2727,0.2184],[0.2263,0.2212],[0.2102,0.2292],[0.1117,0.3159],[0.3262,0.2193],[0.1941,0.3259],[0.3077,0.004018],[0.006211,0.438],[0.2514,0.01327],[0.222,0.2282],[0.2227,0.2291],[0.2271,0.2203],[0.2308,0.2203],[0.2306,0.221]],"paths":[{"w":7,"above":["UGA"],"tied":["ALA"],"prob":0.1021,"g":[[3,1,1],[4,0,1],[5,0,1],[6,1,1],[8,1,0.8496],[9,1,0.8283],[10,1,0.9447],[12,0,1],[13,1,1],[14,0,1],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":[],"tied":["UGA","ALA"],"prob":0.03524,"g":[[5,0,1],[6,1,1],[8,1,0.8496],[9,1,0.8283],[10,1,0.9447],[12,0,1],[13,1,1],[14,0,1],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":["UGA"],"tied":["ALA","UK"],"prob":0.02472,"g":[[3,1,1],[4,0,1],[5,0,1],[6,1,1],[7,1,1],[8,0,1],[9,1,0.8283],[10,1,0.9447],[12,0,1],[13,1,1],[14,0,1],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":["UGA"],"tied":[],"prob":0.0214,"g":[[3,1,1],[4,0,1],[8,1,0.8496],[9,1,0.8283],[10,1,0.9447],[12,0,1],[13,1,1],[14,0,1],[15,0,0.8151],[16,0,0.9271]]},{"w":7,"above":[],"tied":["UGA"],"prob":0.007388,"g":[[8,1,0.8496],[9,1,0.8283],[10,1,0.9447],[12,0,1],[13,1,1],[14,0,1],[15,0,0.8151],[16,0,0.9271]]}]},"MISS":{"p":0.01762,"c":60999,"mp":0.0005937,"mc":5627,"rec":{"4":{"t":262144,"tp":0.09725,"i":0,"ip":0,"m":0,"b":{"2":{"t":262144,"i":0,"ip":0,"m":0,"s":{"1":[0,3887],"2":[0,21562],"3":[0,51312],"4":[0,69147],"5":[0,59242],"6":[0,34896],"7":[0,15180],"8":[0,5162],"9":[0,1407],"10":[0,302],"11":[0,44],"12":[0,3]}}}},"5":{"t":524288,"tp":0.4585,"i":614,"ip":3.526e-7,"m":49,"b":{"1":{"t":2760,"i":614,"ip":3.526e-7,"m":49,"s":{"4":[3,3],"5":[14,42],"6":[67,224],"7":[162,596],"8":[202,865],"9":[133,694],"10":[33,288],"11":[0,48]}},"2":{"t":521528,"i":0,"ip":0,"m":0,"s":{"1":[0,10540],"2":[0,48556],"3":[0,101424],"4":[0,129117],"5":[0,112782],"6":[0,71544],"7":[0,33580],"8":[0,11295],"9":[0,2438],"10":[0,252]}}}},"6":{"t":262144,"tp":0.4443,"i":60385,"ip":0.01762,"m":5578,"b":{"0":{"t":28224,"i":9645,"ip":0.0002806,"m":1555,"s":{"2":[184,184],"3":[964,1696],"4":[2411,5800],"5":[3140,9440],"6":[2144,7672],"7":[699,2960],"8":[97,456],"9":[6,16]}},"1":{"t":111552,"i":50740,"ip":0.01734,"m":4023,"s":{"1":[1472,1472],"2":[8160,10936],"3":[16986,30416],"4":[16946,38952],"5":[6227,23152],"6":[895,6072],"7":[54,544],"8":[0,8]}},"2":{"t":122368,"i":0,"ip":0,"m":0,"s":{"1":[0,10336],"2":[0,36544],"3":[0,46112],"4":[0,24224],"5":[0,4928],"6":[0,224]}}}}},"lev":[[0.03055,5.019e-7],[0.01155,0.02263],[0.0172,0.01781],[0.02291,0.01696],[0.01849,0.01369],[0.008311,0.1072],[0.09582,0.01015],[0.02644,0.01215],[0.006066,0.02297],[0.005695,0.02755],[0.02271,0.01743],[0.01767,0.01748],[0.01473,0.02513],[0.02671,0.008631],[0.01568,0.0321],[0.01686,0.02101],[0.0176,0.01794],[0.01744,0.01775],[0.01533,0.01849],[6.101e-7,0.02288]],"paths":[{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX","TENN"],"prob":0.002279,"g":[[0,0,1],[1,1,0.8083],[3,1,0.9487],[4,0,0.9749],[10,1,0.9507],[16,0,0.8315],[18,1,0.8104],[19,1,1]]},{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","LSU"],"prob":0.00226,"g":[[0,0,1],[1,1,0.9295],[3,1,0.9294],[4,0,0.9656],[9,1,1],[10,1,1],[11,0,1],[12,0,1],[13,0,1],[14,0,1],[16,0,1],[19,1,1]]},{"w":6,"above":["UGA"],"tied":["ALA","TEX","TENN"],"prob":0.001845,"g":[[0,0,1],[3,1,0.9626],[4,0,0.9643],[7,0,1],[8,1,1],[10,1,0.9506],[14,0,0.8204],[16,0,0.8561],[19,1,1]]},{"w":6,"above":["UGA"],"tied":["ALA","TEX","TENN","LSU"],"prob":0.001817,"g":[[0,0,1],[3,1,0.9645],[4,0,0.9624],[7,0,1],[8,1,1],[9,1,1],[10,1,1],[11,0,1],[12,0,1],[13,0,1],[14,0,1],[16,0,1],[19,1,1]]},{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX","LSU"],"prob":0.001517,"g":[[0,0,1],[3,1,0.9346],[4,0,0.965],[9,1,1],[10,1,1],[11,0,1],[13,0,1],[16,0,1],[19,1,1]]}]},"SC":{"p":0.001781,"c":54452,"mp":0.00007188,"mc":2059,"rec":{"4":{"t":262144,"tp":0.1516,"i":0,"ip":0,"m":0,"b":{"2":{"t":262144,"i":0,"ip":0,"m":0,"s":{"1":[0,4511],"2":[0,23003],"3":[0,51315],"4":[0,66839],"5":[0,57534],"6":[0,35222],"7":[0,16094],"8":[0,5670],"9":[0,1571],"10":[0,335],"11":[0,47],"12":[0,3]}}}},"5":{"t":524288,"tp":0.7016,"i":212,"ip":2.237e-8,"m":9,"b":{"1":{"t":2576,"i":212,"ip":2.237e-8,"m":9,"s":{"5":[0,18],"6":[22,156],"7":[91,516],"8":[80,836],"9":[19,706],"10":[0,296],"11":[0,48]}},"2":{"t":521712,"i":0,"ip":0,"m":0,"s":{"1":[0,10540],"2":[0,48556],"3":[0,101424],"4":[0,129120],"5":[0,112806],"6":[0,71612],"7":[0,33660],"8":[0,11324],"9":[0,2426],"10":[0,244]}}}},"6":{"t":262144,"tp":0.1468,"i":54240,"ip":0.001781,"m":2050,"b":{"0":{"t":56448,"i":18809,"ip":0.0001141,"m":1483,"s":{"2":[368,368],"3":[2004,3760],"4":[5446,12968],"5":[6767,19920],"6":[3503,14320],"7":[714,4576],"8":[7,520],"9":[0,16]}},"1":{"t":110208,"i":35431,"ip":0.001667,"m":567,"s":{"1":[920,920],"2":[3776,7816],"3":[9021,25888],"4":[13013,39544],"5":[7132,27528],"6":[1550,7912],"7":[19,592],"8":[0,8]}},"2":{"t":95488,"i":0,"ip":0,"m":0,"s":{"1":[0,5640],"2":[0,23544],"3":[0,36160],"4":[0,23824],"5":[0,6072],"6":[0,248]}}}}},"lev":[[0.001345,0.002377],[0.001821,0.001749],[0.002084,0.001648],[0.008306,0.000962],[1.798e-8,0.009894],[0.001339,0.006037],[0.00641,0.001339],[0.003308,0.000833],[0.00101,0.002138],[0.001308,0.002175],[0.004628,0.001674],[0.001376,0.003213],[0.0009183,0.00402],[0.001766,0.001797],[0.00172,0.002238],[0.002185,4.125e-8],[0.001541,0.004843],[0.001204,0.002193],[0.001175,0.002011],[0.002762,0.001489]],"paths":[{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX","TENN"],"prob":0.0003165,"g":[[3,1,1],[4,1,1],[9,1,0.9489],[10,1,0.9489],[11,0,1],[12,1,0.9328],[13,1,0.9409],[14,0,0.992],[15,0,1],[16,0,0.8826]]},{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX"],"prob":0.0001918,"g":[[3,1,1],[4,1,1],[10,1,0.9248],[12,1,0.8246],[15,0,1]]},{"w":6,"above":["ALA"],"tied":["UGA","TEX","TENN","MIZ"],"prob":0.0001315,"g":[[2,1,1],[3,0,1],[4,1,1],[5,0,1],[6,1,1],[7,0,1],[8,1,1],[10,1,0.9577],[14,0,0.9053],[15,0,1],[16,0,0.8692]]},{"w":6,"above":["ALA"],"tied":["UGA","TEX","TENN","LSU","MIZ"],"prob":0.00007562,"g":[[0,1,0.8792],[2,1,1],[3,0,1],[4,1,1],[5,0,1],[6,1,1],[7,0,1],[8,1,1],[9,1,1],[10,1,1],[11,0,1],[12,0,1],[13,0,1],[14,0,1],[15,0,1],[16,0,1],[17,1,0.8849],[18,1,0.9389]]},{"w":6,"above":["UGA"],"tied":["ALA","TEX","TENN","MISS"],"prob":0.00005522,"g":[[0,0,1],[3,1,1],[4,1,1],[7,0,1],[8,1,1],[10,1,0.8732],[14,0,0.951],[15,0,1],[18,1,0.9544],[19,1,1]]}]},"LSU":{"p":0.005472,"c":13900,"mp":0.0000225,"mc":232,"rec":{"3":{"t":131072,"tp":0.01663,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,5952],"2":[0,23344],"3":[0,38560],"4":[0,35344],"5":[0,19712],"6":[0,6736],"7":[0,1312],"8":[0,112]}}}},"4":{"t":393216,"tp":0.248,"i":0,"ip":0,"m":0,"b":{"2":{"t":393216,"i":0,"ip":0,"m":0,"s":{"1":[0,10231],"2":[0,46208],"3":[0,90119],"4":[0,102242],"5":[0,77310],"6":[0,42200],"7":[0,17462],"8":[0,5676],"9":[0,1451],"10":[0,280],"11":[0,35],"12":[0,2]}}}},"5":{"t":393216,"tp":0.4836,"i":6,"ip":5.49e-10,"m":1,"b":{"1":{"t":2520,"i":6,"ip":5.49e-10,"m":1,"s":{"4":[0,3],"5":[1,38],"6":[3,194],"7":[2,518],"8":[0,779],"9":[0,656],"10":[0,284],"11":[0,48]}},"2":{"t":390696,"i":0,"ip":0,"m":0,"s":{"1":[0,4960],"2":[0,27664],"3":[0,67504],"4":[0,96189],"5":[0,90714],"6":[0,60830],"7":[0,29850],"8":[0,10421],"9":[0,2320],"10":[0,244]}}}},"6":{"t":131072,"tp":0.2518,"i":13894,"ip":0.005472,"m":231,"b":{"0":{"t":18432,"i":2945,"ip":0.0000684,"m":117,"s":{"2":[144,144],"3":[720,1392],"4":[741,4408],"5":[791,6240],"6":[428,4400],"7":[110,1568],"8":[11,264],"9":[0,16]}},"1":{"t":67584,"i":10949,"ip":0.005403,"m":114,"s":{"1":[1368,1368],"2":[1704,9048],"3":[2974,21200],"4":[3885,21832],"5":[894,11048],"6":[115,2776],"7":[9,304],"8":[0,8]}},"2":{"t":45056,"i":0,"ip":0,"m":0,"s":{"1":[0,4968],"2":[0,15048],"3":[0,15792],"4":[0,7472],"5":[0,1640],"6":[0,136]}}}}},"lev":[[0.003598,0.008027],[0.006714,0.004448],[0.004047,0.006098],[0.005502,0.005468],[0.005317,0.006174],[0.003097,0.0283],[0.03523,0.002626],[0.007674,0.004103],[0.002493,0.006848],[0,0.01002],[0.00195,0.005605],[0.00652,0.001772],[0.002737,0.01256],[0.011,0],[0.004572,0.01215],[0.004991,0.007592],[0.005902,7.532e-9],[0.00545,0.005487],[0.005253,0.005554],[0.00938,0.004305]],"paths":[{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX"],"prob":0.002371,"g":[[3,1,0.956],[4,0,0.9627],[9,1,1],[10,1,1],[11,0,1],[13,0,1],[16,0,1]]},{"w":6,"above":["UGA"],"tied":["ALA","TEX"],"prob":0.001121,"g":[[3,1,0.976],[4,0,0.9619],[7,0,1],[8,1,1],[9,1,1],[10,1,1],[11,0,1],[13,0,1],[16,0,1]]},{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX","SC"],"prob":0.0003899,"g":[[3,1,1],[4,1,1],[9,1,1],[10,1,1],[11,0,1],[13,0,1],[15,0,1],[16,0,1]]},{"w":6,"above":["UGA"],"tied":["ALA","TENN","MISS"],"prob":0.0002888,"g":[[0,0,1],[3,1,0.9645],[4,0,0.9624],[5,0,1],[6,0,1],[7,0,1],[8,1,1],[9,1,1],[10,1,0.8538],[11,1,0.8861],[12,0,1],[13,0,1],[14,0,1],[16,0,1],[19,1,1]]},{"w":6,"above":["UGA"],"tied":["ALA","TEX","SC"],"prob":0.0001882,"g":[[3,1,1],[4,1,1],[7,0,1],[8,1,1],[9,1,1],[10,1,1],[11,0,1],[13,0,1],[15,0,1],[16,0,1]]}]},"MIZ":{"p":0.0007201,"c":40439,"mp":0.00004972,"mc":2349,"rec":{"3":{"t":131072,"tp":0.08573,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,8640],"2":[0,28944],"3":[0,40896],"4":[0,32144],"5":[0,15296],"6":[0,4400],"7":[0,704],"8":[0,48]}}}},"4":{"t":393216,"tp":0.3914,"i":0,"ip":0,"m":0,"b":{"2":{"t":393216,"i":0,"ip":0,"m":0,"s":{"1":[0,10387],"2":[0,46169],"3":[0,89685],"4":[0,102279],"5":[0,77734],"6":[0,42258],"7":[0,17298],"8":[0,5606],"9":[0,1463],"10":[0,293],"11":[0,41],"12":[0,3]}}}},"5":{"t":393216,"tp":0.4699,"i":159,"ip":4.506e-8,"m":6,"b":{"1":{"t":2760,"i":159,"ip":4.506e-8,"m":6,"s":{"4":[0,3],"5":[12,42],"6":[57,224],"7":[61,596],"8":[25,865],"9":[4,694],"10":[0,288],"11":[0,48]}},"2":{"t":390456,"i":0,"ip":0,"m":0,"s":{"1":[0,6460],"2":[0,31164],"3":[0,68864],"4":[0,93549],"5":[0,87678],"6":[0,59688],"7":[0,29852],"8":[0,10575],"9":[0,2374],"10":[0,252]}}}},"6":{"t":131072,"tp":0.05301,"i":40280,"ip":0.00072,"m":2343,"b":{"0":{"t":37632,"i":13373,"ip":0.00004748,"m":1624,"s":{"2":[552,552],"3":[2616,3616],"4":[5053,9352],"5":[3664,12192],"6":[1178,8456],"7":[289,2992],"8":[21,456],"9":[0,16]}},"1":{"t":60928,"i":26907,"ip":0.0006726,"m":719,"s":{"1":[1104,1104],"2":[5124,7064],"3":[9212,17040],"4":[8412,19816],"5":[2657,11872],"6":[382,3576],"7":[16,448],"8":[0,8]}},"2":{"t":32512,"i":0,"ip":0,"m":0,"s":{"1":[0,2832],"2":[0,9584],"3":[0,11808],"4":[0,6528],"5":[0,1616],"6":[0,144]}}}}},"lev":[[0.0005645,0.0009322],[0.0007082,0.0007299],[3.791e-9,0.001037],[0.006453,4.942e-8],[0.0005415,0.001533],[0.0004628,0.003193],[0.00343,0.0004609],[0.0008307,0.0006514],[0,0.001053],[0.0008906,0.0005782],[0.002134,0.0006667],[0.0003498,0.002027],[0.0002922,0.00183],[0.0007431,0.0006974],[0.0006345,0.001356],[0.0005422,0.001504],[0.0005862,0.002423],[0.0005241,0.0008597],[0.0004638,0.0008169],[0.0008666,0.0006764]],"paths":[{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX","TENN"],"prob":0.00008836,"g":[[2,1,1],[3,0,1],[4,0,1],[7,1,1],[8,1,1],[10,1,0.9238],[14,0,0.9342],[18,1,0.8669]]},{"w":6,"above":["UGA"],"tied":["ALA","TEX","TENN"],"prob":0.00007168,"g":[[0,1,0.812],[2,1,1],[3,0,1],[4,0,1],[7,0,1],[8,1,1],[10,1,0.9233],[14,0,0.8358],[18,1,0.8675]]},{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX"],"prob":0.000061,"g":[[2,1,1],[3,0,1],[4,0,1],[7,1,1],[8,1,1],[9,0,0.8329],[10,1,0.937],[12,1,0.8097],[13,0,0.8888]]},{"w":6,"above":["ALA"],"tied":["UGA","TEX","SC"],"prob":0.00004637,"g":[[2,1,1],[3,0,1],[4,1,1],[5,0,1],[6,1,1],[7,0,1],[8,1,1],[10,1,0.9248],[12,1,0.8246],[15,0,1]]},{"w":6,"above":["UGA"],"tied":["ALA","UK","TENN"],"prob":0.00004606,"g":[[2,1,1],[3,0,1],[4,0,1],[7,1,1],[8,1,1],[9,1,0.9562],[10,1,0.8098],[11,1,0.8842],[12,1,0.9187],[13,1,0.9364],[14,0,0.9822],[16,0,0.8767]]}]},"OU":{"p":0.00277,"c":25965,"mp":0.000005648,"mc":288,"rec":{"3":{"t":131072,"tp":0.181,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,6912],"2":[0,25920],"3":[0,40320],"4":[0,34240],"5":[0,17408],"6":[0,5312],"7":[0,896],"8":[0,64]}}}},"4":{"t":393216,"tp":0.4321,"i":0,"ip":0,"m":0,"b":{"2":{"t":393216,"i":0,"ip":0,"m":0,"s":{"1":[0,11037],"2":[0,48454],"3":[0,92052],"4":[0,101807],"5":[0,75178],"6":[0,40460],"7":[0,16808],"8":[0,5574],"9":[0,1489],"10":[0,310],"11":[0,44],"12":[0,3]}}}},"5":{"t":393216,"tp":0.3161,"i":539,"ip":6.945e-7,"m":40,"b":{"1":{"t":2208,"i":539,"ip":6.945e-7,"m":40,"s":{"4":[0,3],"5":[3,36],"6":[47,176],"7":[141,454],"8":[186,669],"9":[131,566],"10":[31,256],"11":[0,48]}},"2":{"t":391008,"i":0,"ip":0,"m":0,"s":{"1":[0,7140],"2":[0,33836],"3":[0,72720],"4":[0,95293],"5":[0,85860],"6":[0,56392],"7":[0,27546],"8":[0,9731],"9":[0,2238],"10":[0,252]}}}},"6":{"t":131072,"tp":0.07083,"i":25426,"ip":0.002769,"m":248,"b":{"0":{"t":14112,"i":7369,"ip":0.00007904,"m":107,"s":{"2":[184,184],"3":[380,1328],"4":[1529,3696],"5":[2618,4928],"6":[2054,3144],"7":[584,800],"8":[20,32]}},"1":{"t":55776,"i":18057,"ip":0.00269,"m":141,"s":{"1":[920,920],"2":[1914,6400],"3":[4378,16560],"4":[6087,19488],"5":[4050,10248],"6":[694,2096],"7":[14,64]}},"2":{"t":61184,"i":0,"ip":0,"m":0,"s":{"1":[0,5640],"2":[0,19240],"3":[0,23104],"4":[0,11216],"5":[0,1944],"6":[0,40]}}}}},"lev":[[1.323e-7,0.006546],[4.986e-7,0.005052],[0.009069,5.657e-7],[0.004769,0.002519],[0.00252,0.003907],[0.001495,0.01502],[0.01575,0.001528],[0.003611,0.002247],[0.001245,0.003474],[0.0005144,0.004646],[0.002872,0.002766],[0.003174,0.001342],[0.002075,0.004571],[0.004024,0.001528],[0.002629,0.003815],[0.002782,0.002715],[0.002762,0.002871],[0.002299,0.003105],[0.001451,0.003268],[0.002245,0.002926]],"paths":[{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","LSU"],"prob":0.000421,"g":[[0,1,1],[1,1,1],[2,0,1],[3,1,0.8959],[4,0,0.9713],[9,1,1],[10,1,1],[11,0,1],[12,0,1],[13,0,1],[14,0,1],[16,0,1],[18,1,0.9902],[19,1,0.8444]]},{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX","TENN"],"prob":0.0003729,"g":[[0,1,1],[1,1,1],[2,0,1],[3,1,0.8859],[4,0,0.9664],[9,1,0.9195],[10,1,0.9195],[11,0,1],[13,1,0.8316],[14,0,0.8237],[16,0,0.8083],[18,1,0.8602],[19,1,0.8066]]},{"w":6,"above":["UGA"],"tied":["ALA","UK","TEX","LSU"],"prob":0.0003,"g":[[0,1,1],[1,1,1],[2,0,1],[3,1,0.8858],[4,0,0.9666],[9,1,1],[10,1,1],[11,0,1],[12,1,0.8111],[13,0,1],[16,0,1],[18,1,0.8734],[19,1,0.8091]]},{"w":6,"above":["UGA"],"tied":["ALA","TEX","TENN","LSU"],"prob":0.0002701,"g":[[0,1,1],[1,1,1],[2,0,1],[3,1,0.8784],[4,0,0.9657],[7,0,1],[8,1,1],[9,1,1],[10,1,1],[11,0,1],[12,0,1],[13,0,1],[14,0,1],[16,0,1],[18,1,0.8414],[19,1,0.802]]},{"w":6,"above":["UGA"],"tied":["ALA","TEX","TENN"],"prob":0.0002086,"g":[[0,1,1],[1,1,1],[2,0,1],[3,1,0.8879],[4,0,0.9654],[7,0,1],[8,1,1],[9,1,0.9236],[10,1,0.9236],[11,0,1],[13,1,0.8349],[14,0,0.8016],[16,0,0.8175]]}]},"FLA":{"p":0.000002257,"c":1359,"mp":1.578e-10,"mc":4,"rec":{"3":{"t":262144,"tp":0.1691,"i":0,"ip":0,"m":0,"b":{"2":{"t":262144,"i":0,"ip":0,"m":0,"s":{"1":[0,13392],"2":[0,51408],"3":[0,81360],"4":[0,69328],"5":[0,34672],"6":[0,10224],"7":[0,1648],"8":[0,112]}}}},"4":{"t":524288,"tp":0.5527,"i":0,"ip":0,"m":0,"b":{"2":{"t":524288,"i":0,"ip":0,"m":0,"s":{"1":[0,15613],"2":[0,66845],"3":[0,124483],"4":[0,135879],"5":[0,99226],"6":[0,52346],"7":[0,21054],"8":[0,6726],"9":[0,1721],"10":[0,345],"11":[0,47],"12":[0,3]}}}},"5":{"t":262144,"tp":0.2781,"i":1359,"ip":0.000002257,"m":4,"b":{"1":{"t":1932,"i":1359,"ip":0.000002257,"m":4,"s":{"5":[3,9],"6":[23,87],"7":[153,327],"8":[408,607],"9":[476,582],"10":[248,272],"11":[48,48]}},"2":{"t":260212,"i":0,"ip":0,"m":0,"s":{"1":[0,2380],"2":[0,13772],"3":[0,36304],"4":[0,57984],"5":[0,62607],"6":[0,47969],"7":[0,26393],"8":[0,10113],"9":[0,2422],"10":[0,268]}}}}},"lev":[[0.000001194,0.000003706],[0.000002696,0.000001895],[0.000001175,0.000002733],[3.564e-7,0.000002496],[0.000002649,4.728e-7],[0,0.00002395],[0.00002585,0],[0.000005889,0],[0,0.0000033],[7.002e-7,0.000003552],[0.00001698,0.000001701],[3.205e-7,0.000009093],[4.641e-7,0.000006906],[0.000002176,0.000002337],[7.217e-7,0.00001366],[0.00000221,0.000002462],[0.000001467,0.00001231],[0.000002785,0.000001881],[0,0.00000311],[0.000004266,0.000001657]],"paths":[{"w":5,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","MISS","SC","LSU","MIZ"],"prob":4.642e-7,"g":[[2,1,0.9885],[3,1,0.9885],[4,0,0.9564],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,0.8666],[11,1,0.898],[12,1,0.8666],[15,0,0.9564],[17,1,1],[18,1,1]]},{"w":5,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","MISS","SC","LSU","MIZ","AUB"],"prob":3.32e-7,"g":[[2,1,0.9883],[3,1,0.9883],[4,0,0.9526],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,0.8661],[11,1,0.8981],[12,1,0.8671],[15,0,0.9526],[17,0,1],[18,1,1]]},{"w":5,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","MISS","SC","LSU","MIZ","OU","AUB"],"prob":2.238e-7,"g":[[0,1,0.979],[1,1,0.9574],[2,1,0.9364],[3,1,0.9364],[4,0,0.9526],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,0.8661],[11,1,0.8981],[12,1,0.8671],[15,0,0.9526],[17,0,1],[18,1,1],[19,1,0.979]]},{"w":5,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","MISS","SC","LSU","MIZ","OU"],"prob":1.957e-7,"g":[[0,1,0.9936],[1,1,0.987],[2,1,0.9806],[3,1,0.9806],[4,0,0.9526],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,0.9444],[11,1,0.8398],[14,1,0.9502],[15,0,0.9526],[17,1,1],[18,1,1],[19,1,0.9936]]},{"w":5,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","MISS","SC","LSU","OU","AUB"],"prob":1.134e-7,"g":[[2,0,1],[3,1,1],[4,0,0.9526],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,0.8661],[11,1,0.8981],[12,1,0.8671],[15,0,0.9526],[17,0,1],[18,1,1]]}]},"AUB":{"p":6.196e-9,"c":117,"mp":1.064e-10,"mc":10,"rec":{"3":{"t":262144,"tp":0.533,"i":0,"ip":0,"m":0,"b":{"2":{"t":262144,"i":0,"ip":0,"m":0,"s":{"1":[0,17856],"2":[0,58128],"3":[0,80896],"4":[0,63696],"5":[0,30784],"6":[0,9136],"7":[0,1536],"8":[0,112]}}}},"4":{"t":524288,"tp":0.4307,"i":0,"ip":0,"m":0,"b":{"2":{"t":524288,"i":0,"ip":0,"m":0,"s":{"1":[0,15613],"2":[0,66845],"3":[0,124483],"4":[0,135879],"5":[0,99226],"6":[0,52346],"7":[0,21054],"8":[0,6726],"9":[0,1721],"10":[0,345],"11":[0,47],"12":[0,3]}}}},"5":{"t":262144,"tp":0.03632,"i":117,"ip":6.196e-9,"m":10,"b":{"1":{"t":1932,"i":117,"ip":6.196e-9,"m":10,"s":{"5":[1,9],"6":[21,87],"7":[49,327],"8":[39,607],"9":[7,582],"10":[0,272],"11":[0,48]}},"2":{"t":260212,"i":0,"ip":0,"m":0,"s":{"1":[0,2108],"2":[0,13084],"3":[0,36160],"4":[0,59024],"5":[0,63647],"6":[0,47953],"7":[0,25833],"8":[0,9777],"9":[0,2358],"10":[0,268]}}}}},"lev":[[6.507e-9,5.771e-9],[9.071e-9,3.826e-9],[4.484e-9,6.948e-9],[1.693e-10,6.952e-9],[7.21e-9,1.574e-9],[0,6.575e-8],[7.097e-8,0],[1.617e-8,0],[0,9.058e-9],[1.295e-9,1.027e-8],[1.384e-7,1.202e-9],[3.368e-9,1.618e-8],[4.22e-9,1.132e-8],[9.567e-9,2.857e-9],[1.843e-9,3.853e-8],[1.013e-9,2.905e-8],[1.882e-9,6.106e-8],[1.489e-8,0],[1.963e-8,1.119e-9],[2.566e-8,3.86e-10]],"paths":[{"w":5,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","MISS","LSU","MIZ"],"prob":1.28e-9,"g":[[0,0,1],[1,0,1],[2,1,1],[3,1,1],[4,0,1],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,0.8448],[14,1,0.8516],[15,1,1],[17,0,1],[18,0,1],[19,0,1]]},{"w":5,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","LSU","MIZ","OU"],"prob":1.15e-9,"g":[[0,1,1],[1,1,0.991],[2,1,0.991],[3,1,0.991],[4,0,1],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,0.8462],[14,1,0.8463],[15,1,1],[17,0,1],[18,0,1],[19,0,1]]},{"w":5,"above":["UGA"],"tied":["ALA","UK","TEX","TENN","MISS","LSU"],"prob":5.628e-10,"g":[[0,0,1],[1,0,1],[2,0,1],[3,1,1],[4,0,1],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,0.8448],[14,1,0.8516],[15,1,1],[17,0,1],[18,0,1],[19,0,1]]},{"w":5,"above":["UGA"],"tied":["ALA","UK","TENN","MISS","LSU","MIZ"],"prob":4.56e-10,"g":[[2,1,0.9912],[3,1,0.9912],[4,0,1],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,1],[10,0,1],[11,1,1],[12,1,0.8053],[15,1,1],[17,0,1],[18,0,1]]},{"w":5,"above":["UGA"],"tied":["ALA","UK","TENN","MISS","LSU","MIZ","FLA"],"prob":4.382e-10,"g":[[0,0,1],[1,0,1],[2,1,1],[3,1,1],[4,0,1],[5,1,1],[6,0,1],[7,0,1],[8,1,1],[9,1,1],[10,0,1],[11,1,1],[12,1,0.8866],[15,1,1],[17,0,1],[18,1,1],[19,0,1]]}]},"MSST":{"p":0,"c":0,"mp":0,"mc":0,"rec":{"2":{"t":262144,"tp":0.3204,"i":0,"ip":0,"m":0,"b":{"2":{"t":262144,"i":0,"ip":0,"m":0,"s":{"1":[0,64000],"2":[0,115200],"3":[0,69120],"4":[0,13824]}}}},"3":{"t":524288,"tp":0.5454,"i":0,"ip":0,"m":0,"b":{"2":{"t":524288,"i":0,"ip":0,"m":0,"s":{"1":[0,53568],"2":[0,138672],"3":[0,162144],"4":[0,109840],"5":[0,46208],"6":[0,11984],"7":[0,1760],"8":[0,112]}}}},"4":{"t":262144,"tp":0.1342,"i":0,"ip":0,"m":0,"b":{"2":{"t":262144,"i":0,"ip":0,"m":0,"s":{"1":[0,2613],"2":[0,17423],"3":[0,47327],"4":[0,69763],"5":[0,62966],"6":[0,37914],"7":[0,16594],"8":[0,5642],"9":[0,1525],"10":[0,327],"11":[0,47],"12":[0,3]}}}}},"lev":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],"paths":[]},"ARK":{"p":0,"c":0,"mp":0,"mc":0,"rec":{"1":{"t":131072,"tp":0.7282,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,100352],"2":[0,28672],"3":[0,2048]}}}},"2":{"t":393216,"tp":0.2499,"i":0,"ip":0,"m":0,"b":{"2":{"t":393216,"i":0,"ip":0,"m":0,"s":{"1":[0,115200],"2":[0,176640],"3":[0,87552],"4":[0,13824]}}}},"3":{"t":393216,"tp":0.02139,"i":0,"ip":0,"m":0,"b":{"2":{"t":393216,"i":0,"ip":0,"m":0,"s":{"1":[0,29760],"2":[0,92912],"3":[0,123232],"4":[0,92048],"5":[0,41856],"6":[0,11536],"7":[0,1760],"8":[0,112]}}}},"4":{"t":131072,"tp":0.0004907,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,1040],"2":[0,6549],"3":[0,18208],"4":[0,29663],"5":[0,31760],"6":[0,23778],"7":[0,12912],"8":[0,5198],"9":[0,1568],"10":[0,345],"11":[0,48],"12":[0,3]}}}}},"lev":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],"paths":[]},"TAMU":{"p":0,"c":0,"mp":0,"mc":0,"rec":{"1":{"t":131072,"tp":0.3083,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,100352],"2":[0,28672],"3":[0,2048]}}}},"2":{"t":393216,"tp":0.4603,"i":0,"ip":0,"m":0,"b":{"2":{"t":393216,"i":0,"ip":0,"m":0,"s":{"1":[0,115200],"2":[0,176640],"3":[0,87552],"4":[0,13824]}}}},"3":{"t":393216,"tp":0.2036,"i":0,"ip":0,"m":0,"b":{"2":{"t":393216,"i":0,"ip":0,"m":0,"s":{"1":[0,29376],"2":[0,92880],"3":[0,123840],"4":[0,92240],"5":[0,41664],"6":[0,11376],"7":[0,1728],"8":[0,112]}}}},"4":{"t":131072,"tp":0.02775,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,1352],"2":[0,7865],"3":[0,20208],"4":[0,30591],"5":[0,30800],"6":[0,22058],"7":[0,11680],"8":[0,4686],"9":[0,1448],"10":[0,333],"11":[0,48],"12":[0,3]}}}}},"lev":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],"paths":[]},"VAN":{"p":0,"c":0,"mp":0,"mc":0,"rec":{"1":{"t":131072,"tp":0.5794,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,100352],"2":[0,28672],"3":[0,2048]}}}},"2":{"t":393216,"tp":0.3572,"i":0,"ip":0,"m":0,"b":{"2":{"t":393216,"i":0,"ip":0,"m":0,"s":{"1":[0,115200],"2":[0,176640],"3":[0,87552],"4":[0,13824]}}}},"3":{"t":393216,"tp":0.06036,"i":0,"ip":0,"m":0,"b":{"2":{"t":393216,"i":0,"ip":0,"m":0,"s":{"1":[0,26784],"2":[0,89424],"3":[0,124704],"4":[0,95312],"5":[0,43360],"6":[0,11760],"7":[0,1760],"8":[0,112]}}}},"4":{"t":131072,"tp":0.003066,"i":0,"ip":0,"m":0,"b":{"2":{"t":131072,"i":0,"ip":0,"m":0,"s":{"1":[0,1839],"2":[0,10029],"3":[0,23849],"4":[0,32911],"5":[0,29766],"6":[0,19010],"7":[0,9058],"8":[0,3358],"9":[0,987],"10":[0,225],"11":[0,37],"12":[0,3]}}}}},"lev":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],"paths":[]}}};
+const TEAMS={UGA:'Georgia',ALA:'Alabama',UK:'Kentucky',TEX:'Texas',TENN:'Tennessee',MISS:'Ole Miss',SC:'South Carolina',LSU:'LSU',MIZ:'Missouri',OU:'Oklahoma',FLA:'Florida',AUB:'Auburn',MSST:'Mississippi State',ARK:'Arkansas',TAMU:'Texas A&M',VAN:'Vanderbilt'};
+const IDS=Object.keys(TEAMS);
+// winner>loser, conference games through Nov 7
+const PLAYED='ALA>UK ALA>SC ALA>MSST UGA>ALA TENN>ALA ALA>TAMU ALA>LSU UGA>ARK TAMU>ARK TENN>ARK ARK>VAN MIZ>ARK AUB>ARK FLA>AUB AUB>VAN TENN>AUB AUB>UGA LSU>AUB MISS>AUB FLA>MISS MIZ>FLA SC>FLA FLA>TEX UGA>FLA OU>FLA UGA>OU UGA>VAN UGA>MISS UK>TAMU UK>SC UK>LSU UK>OU UK>VAN TENN>UK MISS>LSU LSU>TAMU LSU>MSST MSST>SC MSST>MIZ OU>MSST TEX>MSST VAN>MSST MIZ>TAMU MISS>MIZ TEX>MIZ MISS>VAN TEX>MISS OU>TEX SC>OU SC>TENN SC>TAMU TEX>TENN'.split(' ').map(s=>s.split('>'));
+// [away, home, date]
+const REM=[['MISS','OU','Nov 14'],['TAMU','OU','Nov 21'],['OU','MIZ','Nov 28'],
+['MIZ','UGA','Nov 14'],['UGA','SC','Nov 21'],
+['ALA','VAN','Nov 14'],['AUB','ALA','Nov 28'],
+['FLA','UK','Nov 14'],['UK','MIZ','Nov 21'],
+['TEX','LSU','Nov 14'],['ARK','TEX','Nov 21'],['TEX','TAMU','Nov 27'],
+['TENN','TAMU','Nov 14'],['LSU','TENN','Nov 21'],['TENN','VAN','Nov 28'],
+['SC','ARK','Nov 14'],['LSU','ARK','Nov 28'],
+['AUB','MSST','Nov 14'],['VAN','FLA','Nov 21'],['MSST','MISS','Nov 27']];
+// picks[i]: 0 = away wins, 1 = home wins
+function build(picks){
+  const w={},l={},res={};IDS.forEach(t=>{w[t]=0;l[t]=0;res[t]={}});
+  const add=(a,b)=>{w[a]++;l[b]++;res[a][b]=1;res[b][a]=0};
+  PLAYED.forEach(g=>add(g[0],g[1]));
+  REM.forEach((g,i)=>picks[i]?add(g[1],g[0]):add(g[0],g[1]));
+  return {w,l,res};
+}
+function steps(group,S){
+  const {w,res}=S,n=group.length,out=[];
+  // A head-to-head
+  let rr=true;for(const a of group)for(const b of group)if(a!==b&&res[a][b]===undefined)rr=false;
+  if(n===2){out.push(['Head-to-head',res[group[0]][group[1]]===undefined?null:group.map((t,i)=>res[t][group[1-i]])])}
+  else if(rr){out.push(['Head-to-head',group.map(t=>group.reduce((s,o)=>s+(o!==t?res[t][o]:0),0))])}
+  else{out.push(['Head-to-head',group.map(t=>{const o=group.filter(x=>x!==t);
+    if(o.every(x=>res[t][x]===1))return 2;if(o.every(x=>res[t][x]===0))return 0;return 1})])}
+  // B common opponents
+  const common=IDS.filter(o=>!group.includes(o)&&group.every(t=>res[t][o]!==undefined));
+  if(common.length){out.push(['Record vs common opponents',group.map(t=>common.reduce((s,o)=>s+res[t][o],0))]);
+    // C highest-placed common opponent, tier by tier
+    const tiers=[...new Set(common.map(o=>w[o]))].sort((a,b)=>b-a);
+    tiers.forEach(tw=>{const tier=common.filter(o=>w[o]===tw);
+      out.push(['Record vs highest-placed common opponent',group.map(t=>tier.reduce((s,o)=>s+res[t][o],0))])});
+  }
+  // D opponents' combined conference win pct (everyone plays 9)
+  out.push(["Opponents' combined SEC win %",group.map(t=>IDS.reduce((s,o)=>s+(res[t][o]!==undefined?w[o]:0),0))]);
+  return out;
+}
+function breakTie(group,spots,S,log){
+  if(spots<=0)return{sel:[],und:null};
+  if(group.length<=spots)return{sel:group.slice(),und:null};
+  for(const [name,m] of steps(group,S)){
+    if(!m)continue;const mx=Math.max(...m);if(m.every(v=>v===mx))continue;
+    const top=group.filter((t,i)=>m[i]===mx),rest=group.filter((t,i)=>m[i]!==mx);
+    if(top.length<=spots){log&&log.push(name+': '+top.join(', ')+' advance'+(top.length>1?'':'s'));
+      const r=breakTie(rest,spots-top.length,S,log);return{sel:top.concat(r.sel),und:r.und}}
+    log&&log.push(name+': '+rest.join(', ')+' eliminated');
+    return breakTie(top,spots,S,log);
+  }
+  log&&log.push('Still tied after steps A–D: '+group.join(', ')+' go to capped scoring margin');
+  return{sel:[],und:{group:group.slice(),spots}};
+}
+function titleGame(picks,log){
+  const S=build(picks);let spots=2,sel=[],und=null;
+  const wins=[...new Set(IDS.map(t=>S.w[t]))].sort((a,b)=>b-a);
+  for(const x of wins){const g=IDS.filter(t=>S.w[t]===x);
+    if(g.length>spots&&log)log.push(g.length+' teams tied at '+x+'-'+(9-x)+' for '+spots+' spot'+(spots>1?'s':'')+': '+g.join(', '));
+    const r=breakTie(g,spots,S,log);sel=sel.concat(r.sel);und=r.und;spots-=r.sel.length;if(und||spots<=0)break}
+  return{S,sel,und};
+}
+function ouStatus(picks,log){const r=titleGame(picks,log);
+  if(r.sel.includes('OU'))return'in';if(r.und&&r.und.group.includes('OU'))return'margin';return'out'}
+
+// [nickname, ESPN id, brand, brand-hi, accent, on-brand]
+const META={UGA:['Bulldogs',61,'#ba0c2f','#e5475f','#c9cacb','#ffffff'],ALA:['Crimson Tide',333,'#9e1b32','#d24a63','#d9dbdc','#ffffff'],
+ UK:['Wildcats',96,'#0033a0','#5d8bf0','#e3ebff','#ffffff'],TEX:['Longhorns',251,'#bf5700','#ee8f3f','#f3e6d6','#ffffff'],
+ TENN:['Volunteers',2633,'#ff8200','#ffa64d','#f1f1f1','#1c1003'],MISS:['Rebels',145,'#14213d','#e04a5c','#9fbaf0','#ffffff'],
+ SC:['Gamecocks',2579,'#73000a','#c63a47','#e2e2e2','#ffffff'],LSU:['Tigers',99,'#461d7c','#9a6ce0','#fdd023','#ffffff'],
+ MIZ:['Tigers',142,'#f1b82d','#f6cf68','#f1b82d','#141414'],OU:['Sooners',201,'#a51d24','#d4424a','#dcb65f','#f4ecd9'],
+ FLA:['Gators',57,'#0021a5','#6283f5','#fa6a32','#ffffff'],AUB:['Tigers',2,'#0c2340','#5f95d6','#f08a36','#ffffff'],
+ MSST:['Bulldogs',344,'#660000','#b8444a','#d2d2d2','#ffffff'],ARK:['Razorbacks',8,'#9d2235','#d5506a','#efefef','#ffffff'],
+ TAMU:['Aggies',245,'#500000','#aa4046','#e3d9c8','#ffffff'],VAN:['Commodores',238,'#cfae70','#e2c995','#cfae70','#141414']};
+const ALL=2**REM.length,BASE=build(REM.map(()=>0)); // base only used for current records below
+const NOW={};IDS.forEach(t=>{NOW[t]={w:0,l:0}});PLAYED.forEach(g=>{NOW[g[0]].w++;NOW[g[1]].l++});
+const left=t=>REM.map((g,i)=>({i,g})).filter(x=>x.g[0]===t||x.g[1]===t);
+const dead=t=>DATA.teams[t].c===0&&DATA.teams[t].mc===0;
+const fmt=n=>n.toLocaleString('en-US');
+const pc=x=>{const v=100*x;return (v===0?'0':v>=10?v.toFixed(1):v>=1?v.toFixed(1):v>=.01?v.toFixed(2):'<0.01')+'%'};
+const logo=t=>`<span class="logo" style="--lb:${META[t][2]};--lo:${META[t][5]}"><img src="https://a.espncdn.com/i/teamlogos/ncaa/500/${META[t][1]}.png" alt="${TEAMS[t]} logo" onerror="this.parentNode.classList.add('nologo')"><b aria-hidden="true">${t}</b></span>`;
+const list=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const meter=(a,b,extra)=>`<span class="meter"><em><b style="width:${Math.max(a?1.5:0,100*a/b)}%"></b></em><span class="num">In: ${fmt(a)} of ${fmt(b)} combinations · ${pc(a/b)}${extra?' · '+extra:''}</span></span>`;
+let cur='OU';
+
+function theme(t){const m=META[t],s=document.documentElement.style;s.setProperty('--brand',m[2]);s.setProperty('--brand-hi',m[3]);s.setProperty('--accent',m[4]);s.setProperty('--on-brand',m[5])}
+
+/* picker + table */
+function drawPicker(){
+  document.getElementById('picker').innerHTML=IDS.map(t=>`<button type="button" class="chip${dead(t)?' dead':''}" data-t="${t}" aria-pressed="${t===cur}" style="--sz:38px" title="${TEAMS[t]}">${logo(t)}<span>${t}</span><small class="num">${dead(t)?'OUT':pc(DATA.teams[t].p)}</small></button>`).join('');
+  document.getElementById('table').innerHTML=`<tr><th>Team</th><th>SEC</th><th class="r">SP+</th><th>Left</th><th class="r">Title game, model</th><th class="r">Combinations</th></tr>`+
+   IDS.map(t=>{const d=DATA.teams[t];return `<tr class="row${t===cur?' sel':''}" data-t="${t}" tabindex="0"><td class="tm">${logo(t)}${TEAMS[t]}</td><td class="num">${NOW[t].w}-${NOW[t].l}</td><td class="r num">${DATA.sp[t].toFixed(1)}</td>
+    <td>${left(t).map(x=>(x.g[0]===t?'at '+x.g[1]:'vs '+x.g[0])).join(', ')}</td><td class="r num">${dead(t)?'<span style="color:var(--bad)">Eliminated</span>':pc(d.p)}</td><td class="r num">${fmt(d.c)}</td></tr>`}).join('');
+}
+document.getElementById('picker').addEventListener('click',e=>{const b=e.target.closest('.chip');if(b)select(b.dataset.t,true)});
+document.getElementById('table').addEventListener('click',e=>{const r=e.target.closest('tr.row');if(r)select(r.dataset.t,true)});
+document.getElementById('table').addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('tr.row');if(r)select(r.dataset.t,true)}});
+
+/* header */
+function drawTop(t){
+  const d=DATA.teams[t],L=left(t),mx=NOW[t].w+L.length,R=d.rec,gone=dead(t);
+  const live=Object.keys(R).map(Number).filter(w=>R[w].i||R[w].m).sort((a,b)=>b-a);
+  let badge='Eliminated';
+  if(!gone){const top=R[mx];badge=top.i===top.t?'Wins out and it is in':(live.length===1||R[live[1]].i/R[live[1]].t<.02?'Win Out Required':'Needs help')}
+  const tiles=gone?'':`<div class="tiles">
+    <div class="tile"><b class="num">${pc(d.p)}</b><span>model chance to reach the title game, from SP+ win probabilities</span></div>
+    <div class="tile"><b class="num">${pc(d.c/ALL)}</b><span>of all outcome combinations put ${TEAMS[t]} in (${fmt(d.c)} of ${fmt(ALL)})</span></div>
+    <div class="tile"><b class="num">${pc(R[mx].i/R[mx].t)}</b><span>of combinations work if ${TEAMS[t]} wins out to finish ${mx}-${9-mx}</span></div></div>`;
+  document.getElementById('top').innerHTML=`<div class="hero"><div class="herologo" id="herologo">${logo(t)}${gone?'<div class="stamp">Eliminated</div>':''}</div>
+    <div><div class="eyebrow">SEC standings through Nov 7, 2026 · Atlanta, Dec 5</div>
+    <h1>${TEAMS[t]} ${META[t][0]} – 2026 <span>SEC Championship</span> Mathematical Paths</h1></div></div>
+    ${gone?`<p class="quote">In the SEC it just means more, it didn't mean enough to ${TEAMS[t]} this year.</p>
+      <p class="lede">${TEAMS[t]} is ${NOW[t].w}-${NOW[t].l} in the SEC and can finish no better than ${mx}-${9-mx}. None of the ${fmt(ALL)} ways the last 20 conference games can finish puts it in Atlanta.</p>`
+     :`<p class="lede">${TEAMS[t]} is ${NOW[t].w}-${NOW[t].l} in the SEC with ${L.length} conference game${L.length>1?'s':''} left. Every one of the ${fmt(ALL)} ways the last 20 SEC games can finish was run through the tiebreaker, steps A to D.</p>`}
+    <p style="margin:14px 0 0"><span class="badge"><i></i>${badge}</span></p>
+    <div class="wins">${L.map(x=>`<div><small>${x.g[2]} · ${x.g[1]===t?'Home':'Away'}</small>${x.g[1]===t?'vs '+TEAMS[x.g[0]]:'at '+TEAMS[x.g[1]]} <span style="color:var(--muted)" class="num">· ${pc(x.g[1]===t?DATA.ph[x.i]:1-DATA.ph[x.i])}</span></div>`).join('')}</div>
+    ${tiles}<div class="yard" aria-hidden="true"></div>`;
+  const note=document.getElementById('note');
+  const head=gone?'Eliminated':d.p>=.5?'Favorite to reach Atlanta':d.p>=.1?'Live contender':d.p>=.01?'Long shot, mathematically open':'Extremely low probability but mathematically open';
+  note.innerHTML=`<h3>${head}</h3><p>${gone?`No combination of results gets ${TEAMS[t]} to the title game.`:
+    `${TEAMS[t]} reaches the title game in ${fmt(d.c)} of ${fmt(ALL)} remaining combinations (${pc(d.c/ALL)})${d.mc?`, plus ${fmt(d.mc)} that would come down to scoring margin`:''}. Weighted by SP+ win probabilities, that is a ${pc(d.p)} chance. Combination counts treat every game as a coin flip, so the model figure is the better estimate of real odds.`}</p>`;
+}
+
+/* top 5 paths */
+function drawPaths(t){
+  const d=DATA.teams[t],el=document.getElementById('paths');
+  el.innerHTML=d.paths.map((p,i)=>{
+    const rec=`${p.w}-${9-p.w}`,ab=p.above.map(x=>TEAMS[x]),ti=p.tied.map(x=>TEAMS[x]),n=ti.length+1;
+    let h,sub;
+    if(!ab.length&&!ti.length){h=`Finish ${rec}, alone in first`;sub='No tiebreaker. The No. 1 seed.'}
+    else if(!ab.length&&ti.length===1){h=`Finish ${rec}, tied for first with ${ti[0]}`;sub='Both teams go. The tiebreaker only sets the home side.'}
+    else if(!ab.length){h=`Finish ${rec}, survive a ${n}-way tie for first`;sub=`Tied at ${rec} with ${list(ti)}. Top two of the group advance.`}
+    else if(!ti.length){h=`Finish ${rec}, second outright behind ${ab[0]}`;sub='No tiebreaker needed.'}
+    else{h=`Finish ${rec} behind ${ab[0]}, win a ${n}-way tiebreak for second`;sub=`Tied at ${rec} with ${list(ti)}. One spot for the group.`}
+    const must=p.g.filter(x=>x[2]===1).map(x=>{const g=REM[x[0]],w=x[1]?g[1]:g[0],l=x[1]?g[0]:g[1];return `<span>${TEAMS[w]} over ${TEAMS[l]} <i class="num">${g[2]} · ${pc(x[1]?DATA.ph[x[0]]:1-DATA.ph[x[0]])}</i></span>`});
+    return `<article class="path"><div class="rk num">${i+1}</div><div><h3>${h}</h3><p>${sub}</p>
+     <div class="pr"><span><b class="num">${pc(p.prob)}</b> model chance</span><span><b class="num">${pc(p.prob/d.p)}</b> of ${TEAMS[t]}'s title-game chance</span></div>
+     ${must.length?`<p style="margin-top:8px;color:var(--cream)">Required in every version of this path:</p><div class="must">${must.join('')}</div>`:'<p style="margin-top:8px">No single game is required. Several different result sets produce these final standings.</p>'}</div></article>`}).join('');
+}
+
+/* tree */
+let uid=0;
+function renderNode(n){
+  const id='n'+(++uid),has=!!(n.detail||n.kids&&n.kids.length);
+  const el=document.createElement('div');el.className='node t-'+n.tone+(has?'':' leaf');
+  el.innerHTML=`<button type="button" ${has?`aria-expanded="${!!n.open}" aria-controls="${id}"`:'aria-disabled="true"'}>
+    <span class="mark" aria-hidden="true">${n.mark}</span>
+    <span><span class="nt">${n.title}</span>${n.pill?`<span class="pill">${n.pill}</span>`:''}<span class="ns">${n.sub||''}</span>${n.meter||''}</span>
+    ${has?'<span class="chev" aria-hidden="true">▶</span>':'<span></span>'}</button>`;
+  if(has){
+    const fold=document.createElement('div');fold.className='fold'+(n.open?' open':'');fold.id=id;
+    const inner=document.createElement('div'),kids=document.createElement('div');kids.className='kids';
+    if(n.detail){const dd=document.createElement('div');dd.className='detail';dd.innerHTML=n.detail;kids.appendChild(dd)}
+    (n.kids||[]).forEach(k=>kids.appendChild(renderNode(k)));
+    inner.appendChild(kids);fold.appendChild(inner);el.appendChild(fold);
+    el.firstElementChild.addEventListener('click',e=>{const b=e.currentTarget,o=b.getAttribute('aria-expanded')!=='true';b.setAttribute('aria-expanded',o);fold.classList.toggle('open',o)});
+  }
+  return el;
+}
+function sizeRows(B,tone){const ks=Object.keys(B.s).map(Number).sort((a,b)=>a-b);
+  return `<div class="rows t-${tone}">`+ks.map(k=>`<div><span>${k===1?'Alone at this record':k+' teams tied'}</span><em><b style="width:${100*B.s[k][0]/B.s[k][1]}%"></b></em><span class="num">${fmt(B.s[k][0])} / ${fmt(B.s[k][1])}</span></div>`).join('')+'</div>'}
+function branch(B,k,rec,t){
+  if(!B)return null;const name=TEAMS[t];
+  if(k===2)return{tone:'bad',mark:'✕',title:`Branch C · 2+ teams better than ${rec}`,pill:'Eliminated',sub:`Two teams ahead fill both spots. ${fmt(B.t)} combinations, zero for ${name}. No further paths.`};
+  const tone=B.i===0?(B.m?'warn':'bad'):(B.i===B.t?'ok':'warn');
+  return{tone,mark:k?'B':'A',title:k?`Branch B · Exactly 1 team better than ${rec}`:`Branch A · 0 teams better than ${rec}`,pill:tone==='ok'?'Viable':tone==='bad'?'Eliminated':'Tiebreaker',
+   sub:k?`One team is locked in as the No. 1 seed. ${name} needs to be the best of the teams at ${rec}.`:`${rec} is the best record in the league. ${name} needs to rank in the top two of the teams at ${rec}.`,
+   meter:meter(B.i,B.t,'model '+pc(B.ip)),
+   detail:`<p>Results by how many teams finish ${rec}, counting ${name}${B.m?`. ${fmt(B.m)} more combinations go to scoring margin`:''}:</p>`+sizeRows(B,tone)};
+}
+function drawTree(t){
+  const d=DATA.teams[t],R=d.rec,L=left(t),mx=NOW[t].w+L.length,name=TEAMS[t];
+  const ws=Object.keys(R).map(Number).sort((a,b)=>b-a),live=ws.filter(w=>R[w].i||R[w].m),deadW=ws.filter(w=>!(R[w].i||R[w].m));
+  const kids=live.map((w,ix)=>{const r=R[w],rec=`${w}-${9-w}`,got=w-NOW[t].w,tone=r.i===r.t?'ok':'warn';
+    return{tone,mark:String(w),open:ix===0,title:`Finish ${rec}`+(w===mx?' · win out':` · go ${got}-${L.length-got}`),pill:tone==='ok'?'Viable':'Needs help',
+     sub:`Model chance of this record: ${pc(r.tp)}. ${name} is in for ${pc(r.i/r.t)} of the combinations at ${rec}.`,meter:meter(r.i,r.t,'model '+pc(r.ip)),
+     kids:[{tone:'info',mark:'?',open:ix===0,title:`How many teams finish better than ${rec}?`,sub:'Zero or one keeps the path open. Two or more closes it.',
+       kids:[branch(r.b[0],0,rec,t),branch(r.b[1],1,rec,t),branch(r.b[2],2,rec,t)].filter(Boolean)}]}});
+  if(deadW.length)kids.push({tone:'bad',mark:'✕',title:`Finish ${deadW[0]}-${9-deadW[0]} or worse`,pill:'Eliminated',sub:`No combination at ${deadW.map(w=>w+'-'+(9-w)).join(', ')} reaches the title game.`});
+  const top=R[mx],must=live.length===1;
+  const root={tone:top.i===top.t?'ok':'warn',mark:'★',open:true,title:must?`${name} must finish ${mx}-${9-mx}`:`${name} can get in at ${live.map(w=>w+'-'+(9-w)).join(', ')}`,
+   pill:must?'Win Out Required':'',sub:`Now ${NOW[t].w}-${NOW[t].l}. Left: ${L.map(x=>x.g[1]===t?'vs '+TEAMS[x.g[0]]:'at '+TEAMS[x.g[1]]).join(', ')}.`,
+   meter:meter(d.c,ALL,'model '+pc(d.p)),kids};
+  const el=document.getElementById('tree');el.innerHTML='';el.appendChild(renderNode(root));
+}
+const setAll=o=>document.querySelectorAll('#tree button[aria-expanded]').forEach(b=>{b.setAttribute('aria-expanded',o);document.getElementById(b.getAttribute('aria-controls')).classList.toggle('open',o)});
+document.getElementById('expand').onclick=()=>setAll(true);
+document.getElementById('collapse').onclick=()=>{setAll(false);document.querySelector('#tree button').click()};
+
+/* rooting guide */
+function drawGuide(t){
+  const d=DATA.teams[t];
+  const rows=REM.map((g,i)=>{const a=d.lev[i][0],h=d.lev[i][1],hw=h>=a;return{lab:`${TEAMS[hw?g[1]:g[0]]} over ${TEAMS[hw?g[0]:g[1]]}`,date:g[2],hi:Math.max(a,h),lo:Math.min(a,h)}})
+   .sort((x,y)=>(y.hi-y.lo)-(x.hi-x.lo)).slice(0,10),mx=Math.max(...rows.map(r=>r.hi))||1;
+  document.getElementById('guide-sub').textContent=`${TEAMS[t]}'s model chance by result, ten biggest swings`;
+  document.getElementById('guide').innerHTML=rows.map(r=>`<div><span>${r.lab} <span style="color:var(--muted);font-size:12.5px">· ${r.date}</span></span>
+   <span class="bar" title="${pc(r.hi)} if it happens, ${pc(r.lo)} if not"><b style="width:${r.hi/mx*100}%"></b><i style="left:${r.lo/mx*100}%"></i><span class="num">${pc(r.hi)} / ${pc(r.lo)}</span></span></div>`).join('');
+}
+
+/* builder */
+const picks=REM.map(()=>null);
+const gamesEl=document.getElementById('games'),vEl=document.getElementById('verdict');
+function winOut(){picks.fill(null);left(cur).forEach(x=>picks[x.i]=x.g[1]===cur?1:0)}
+function drawGames(){
+  const mine=left(cur).map(x=>x.i),order=mine.concat(REM.map((g,i)=>i).filter(i=>!mine.includes(i)));
+  gamesEl.innerHTML=order.map((i,n)=>{const g=REM[i],h=DATA.ph[i];
+   return (n===0?`<div class="grp">${TEAMS[cur]}</div>`:n===mine.length?'<div class="grp">Rest of the SEC</div>':'')+
+   `<div class="game"><button type="button" data-g="${i}" data-s="0" aria-pressed="${picks[i]===0}">${TEAMS[g[0]]}<small class="num">${pc(1-h)}</small></button><span class="at">at</span><button type="button" data-g="${i}" data-s="1" aria-pressed="${picks[i]===1}">${TEAMS[g[1]]}<small class="num">${pc(h)}</small></button><span class="dt">${g[2]}</span></div>`}).join('');
+}
+gamesEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.g,s=+b.dataset.s;picks[i]=picks[i]===s?null:s;drawGames();evaluate()});
+let job=0;
+function evaluate(){
+  const my=++job,t=cur,name=TEAMS[t],und=picks.map((p,i)=>p===null?i:-1).filter(i=>i>=0);
+  const stat=r=>r.sel.includes(t)?'in':(r.und&&r.und.group.includes(t)?'margin':'out');
+  if(!und.length){
+    const log=[],r=titleGame(picks,log),st=stat(r),tone={in:'ok',margin:'warn',out:'bad'}[st];
+    const order=IDS.slice().sort((a,b)=>r.S.w[b]-r.S.w[a]).slice(0,8);if(!order.includes(t))order.push(t);
+    vEl.style.setProperty('--tone',`var(--${tone})`);
+    vEl.innerHTML=`<h3>${{in:name+' is in',margin:'Down to scoring margin',out:name+' is out'}[st]}</h3><p>${r.sel.length===2?'Title game: '+r.sel.map(x=>TEAMS[x]).join(' vs '):(r.sel.length?TEAMS[r.sel[0]]+' is in. ':'')+'The last spot is undecided after step D.'}</p>
+     ${log.length?'<ol>'+log.map(l=>'<li>'+l.replace(/\b[A-Z]{2,4}\b/g,m=>TEAMS[m]||m)+'</li>').join('')+'</ol>':'<p style="color:var(--muted)">No tiebreaker needed.</p>'}
+     <div class="stand">${order.map(x=>`<div class="${r.sel.includes(x)?'in':''} ${x===t?'me':''}"><span>${TEAMS[x]}</span><span class="num">${r.S.w[x]}-${r.S.l[x]}</span></div>`).join('')}</div>`;
+    return;
+  }
+  if(und.length===REM.length){const d=DATA.teams[t];show(d.c,d.mc,ALL,d.p,und.length);return}
+  const total=2**und.length;let m=0,inn=0,mar=0,pw=0;const p=picks.slice(),ph=DATA.ph;
+  vEl.style.setProperty('--tone','var(--accent)');
+  (function step(){
+    if(my!==job)return;const end=Math.min(total,m+5000);
+    for(;m<end;m++){let w=1;for(let k=0;k<und.length;k++){const b=m>>k&1;p[und[k]]=b;w*=b?ph[und[k]]:1-ph[und[k]]}
+      const r=titleGame(p);if(r.sel.includes(t)){inn++;pw+=w}else if(r.und&&r.und.group.includes(t))mar++}
+    if(m<total){vEl.innerHTML=`<h3>Calculating ${Math.round(100*m/total)}%</h3><p>${fmt(total)} combinations with ${und.length} games open.</p>`;setTimeout(step,0);return}
+    show(inn,mar,total,pw,und.length);
+  })();
+  function show(inn,mar,total,pw,n){
+    const tone=inn?(inn===total?'ok':'warn'):(mar?'warn':'bad');
+    vEl.style.setProperty('--tone',`var(--${tone})`);
+    vEl.innerHTML=`<h3>${inn?pc(pw)+' model chance':(mar?'Scoring margin only':name+' is out')}</h3>
+     <p class="num">${name} reaches the title game in <b>${fmt(inn)}</b> of ${fmt(total)} combinations of the ${n} open games${mar?`, with ${fmt(mar)} more decided by scoring margin`:''}.</p>
+     <p style="color:var(--muted)">Percentages under each team are SP+ win chances. Tap a selected team again to reopen that game.</p>`;
+  }
+}
+document.getElementById('reset').onclick=()=>{picks.fill(null);drawGames();evaluate()};
+document.getElementById('winout').onclick=()=>{winOut();drawGames();evaluate()};
+document.getElementById('chalk').onclick=()=>{DATA.ph.forEach((h,i)=>picks[i]=h>=.5?1:0);drawGames();evaluate()};
+
+/* select + animation */
+let flying=null;
+function select(t,animate){
+  if(flying){flying();}
+  cur=t;theme(t);drawPicker();drawTop(t);
+  const gone=dead(t);
+  ['s-paths','s-tree','s-guide'].forEach(id=>document.getElementById(id).hidden=gone);
+  if(!gone){drawPaths(t);drawTree(t);drawGuide(t)}
+  winOut();drawGames();evaluate();
+  if(!animate||matchMedia('(prefers-reduced-motion:reduce)').matches||!document.body.animate)return;
+  window.scrollTo(0,0);
+  const target=document.getElementById('herologo');target.style.visibility='hidden';
+  const ov=document.createElement('div');ov.className='ov';
+  ov.innerHTML=`<div class="ov-bg"></div><div class="ov-logo">${logo(t)}${gone?'<div class="stamp">Eliminated</div>':''}</div>${gone?`<p class="ov-q">In the SEC it just means more, it didn't mean enough to ${TEAMS[t]} this year.</p>`:''}`;
+  document.body.appendChild(ov);
+  const L=ov.querySelector('.ov-logo'),bg=ov.querySelector('.ov-bg'),q=ov.querySelector('.ov-q'),st=ov.querySelector('.stamp');
+  bg.animate([{opacity:0},{opacity:1}],{duration:220,fill:'both'});
+  L.animate([{transform:'scale(.12)',opacity:0},{transform:'scale(1.1)',opacity:1,offset:.7},{transform:'scale(1)',opacity:1}],{duration:520,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'});
+  if(gone){
+    st.animate([{transform:'rotate(-34deg) scale(3.6)',opacity:0},{transform:'rotate(-14deg) scale(.94)',opacity:1,offset:.85},{transform:'rotate(-14deg) scale(1)',opacity:1}],{duration:300,delay:420,easing:'cubic-bezier(.7,0,.9,.5)',fill:'both'});
+    setTimeout(()=>{if(ov.isConnected)ov.animate([{transform:'translate(0,0)'},{transform:'translate(-7px,5px)'},{transform:'translate(6px,-4px)'},{transform:'translate(-3px,2px)'},{transform:'translate(0,0)'}],{duration:240})},700);
+    q.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:420,delay:900,fill:'both'});
+  }
+  let done=false;
+  const fly=()=>{
+    if(done)return;done=true;clearTimeout(timer);
+    const a=L.getBoundingClientRect(),b=target.getBoundingClientRect(),s=b.width/a.width;
+    const dx=b.left+b.width/2-(a.left+a.width/2),dy=b.top+b.height/2-(a.top+a.height/2);
+    bg.animate([{opacity:1},{opacity:0}],{duration:520,fill:'forwards'});
+    if(q)q.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});
+    const an=L.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${dx}px,${dy}px) scale(${s})`}],{duration:620,easing:'cubic-bezier(.5,0,.2,1)',fill:'forwards'});
+    const end=()=>{target.style.visibility='';ov.remove();flying=null};
+    an.onfinish=end;flying=()=>{an.cancel();end()};
+  };
+  const timer=setTimeout(fly,gone?3600:950);
+  ov.addEventListener('click',fly);
+  flying=()=>{done=true;clearTimeout(timer);target.style.visibility='';ov.remove();flying=null};
+}
+select('OU',false);
+</script>
+</body>
+</html>
