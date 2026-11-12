@@ -133,10 +133,19 @@
       else if (!ab.length) { h = `Finish ${rec}, survive a ${n}-way tie for first`; sub = `Tied with ${list(ti)}. Top two of the group advance.`; }
       else if (!ti.length) { h = `Finish ${rec}, second outright behind ${ab[0]}`; sub = 'No tiebreaker needed.'; }
       else { h = `Finish ${rec} behind ${ab[0]}, win a ${n}-way tiebreak for second`; sub = `Tied with ${list(ti)}. One spot for the group.`; }
-      const must = p.g.map(x => { const g = D.rem[x[0]], w = x[1] ? g[1] : g[0], l = x[1] ? g[0] : g[1]; return `<span>${name(w)} over ${name(l)} <i class="num">${g[2]} · ${pc(x[1] ? g[3] : 1 - g[3])}</i></span>`; });
+      const line = x => { const g = D.rem[x[0]], w = x[1] ? g[1] : g[0], l = x[1] ? g[0] : g[1]; return { x, g, w, l, mine: w === i || l === i }; };
+      const all = p.g.map(line), must = all.filter(o => o.x[2] === 1), rest = all.filter(o => o.x[2] !== 1).sort((a, b2) => b2.x[2] - a.x[2]);
+      const chip = o => `<span${o.mine ? ' style="border-color:var(--brand-hi)"' : ''}>${name(o.w)} over ${name(o.l)} <i class="num">${o.g[2]} · ${pc(o.x[1] ? o.g[3] : 1 - o.g[3])}</i></span>`;
+      const pk = new Uint8Array(D.rem.length); p.g.forEach(x => { pk[x[0]] = x[1]; }); E.apply(pk);
+      const ord = D.teams.map((_, t) => t).sort((a, b2) => E.pct[b2] - E.pct[a]).slice(0, 6); if (!ord.includes(i)) ord.push(i);
+      const stand = ord.map(t => `<span${t === i ? ' style="border-color:var(--brand-hi)"' : ''}>${D.teams[t].ab} <i class="num">${E.W[t]}-${E.G[t] - E.W[t]}</i></span>`).join('');
+      const losers = {}; all.forEach(o => { if (o.l !== i && (p.above.includes(o.l) || p.tied.includes(o.l) || D.stats[o.l].p > 0.002)) (losers[o.l] = losers[o.l] || []).push(o); });
+      const lose = Object.keys(losers).map(Number).filter(t => t !== i).sort((a, b2) => D.stats[b2].p - D.stats[a].p).map(t => `<li><b>${name(t)}</b> loses to ${list(losers[t].map(o => name(o.w) + (o.x[2] === 1 ? '' : ' (' + pc(o.x[2]) + ' of versions)')))}</li>`).join('');
       return `<article class="path"><div class="rk num">${k + 1}</div><div><h3>${h}</h3><p>${sub}</p>
         <div class="pr"><span><b class="num">${pc(p.prob)}</b> model chance</span><span><b class="num">${pc(p.prob / d.p)}</b> of ${name(i)}'s title-game chance</span></div>
-        ${must.length ? `<p style="margin-top:8px;color:var(--cream)">Required in every ${D.exact ? '' : 'simulated '}version of this path:</p><div class="must">${must.join('')}</div>` : '<p style="margin-top:8px">No single game is required. Several different result sets produce these final standings.</p>'}</div></article>`;
+        ${must.length ? `<p style="margin-top:10px;color:var(--cream)">Has to happen in every ${D.exact ? '' : 'simulated '}version (${must.length}):</p><div class="must">${must.map(chip).join('')}</div>` : '<p style="margin-top:10px">No single game is mandatory. Several different result sets produce these final standings.</p>'}
+        ${lose ? `<p style="margin-top:10px;color:var(--cream)">Which contenders lose, in the most likely version:</p><ul class="lose">${lose}</ul>` : ''}
+        ${rest.length ? `<details class="more"><summary>Most likely version: all ${all.length} results</summary><p>The single likeliest set of results that produces this path. The percentage is how often that result appears across every version of the path, so anything near 50% does not matter to it.</p><div class="must">${rest.map(o => `<span${o.mine ? ' style="border-color:var(--brand-hi)"' : ''}>${name(o.w)} over ${name(o.l)} <i class="num">${o.g[2]} · in ${pc(o.x[2])}</i></span>`).join('')}</div><p style="margin-top:10px">Final standings in that version:</p><div class="must">${stand}</div></details>` : `<p style="margin-top:10px">Final standings:</p><div class="must">${stand}</div>`}</div></article>`;
     }).join('') : '<div class="empty">No path showed up in the model-weighted runs. Any remaining route is too unlikely to rank.</div>';
   }
 

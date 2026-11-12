@@ -84,7 +84,7 @@ function analyze(C, ph) {
         if (st >= 2 && !tally) marP[t] += wt;
         if (st & 1) {
           const key = w * 1099511627776 + am * 1048576 + tm;
-          if (tally) { const o = tally[t].get(key); if (o) { o.prob += wt; for (let g = 0; g < R; g++) if (p[g]) o.hw[g] += wt; } }
+          if (tally) { const o = tally[t].get(key); if (o) { o.prob += wt; for (let g = 0; g < R; g++) if (p[g]) o.hw[g] += wt; if (wt > o.best) { o.best = wt; o.bp = Array.from(p); } } }
           else { mI[I3(t, w, k)] += wt; totP[t] += wt; for (let g = 0; g < R; g++) lev[(t * R + g) * 2 + p[g]] += wt; sig[t].set(key, (sig[t].get(key) || 0) + wt); }
         }
       }
@@ -96,7 +96,7 @@ function analyze(C, ph) {
   }
   if (!exact) { const rnd = rng32(777); for (let s = 0; s < MC_N; s++) { for (let i = 0; i < R; i++) p[i] = rnd() < 0.5 ? 1 : 0; scenario(0, true, false); } }
   modelPass();
-  tally = sig.map(m => new Map([...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => [e[0], { prob: 0, hw: new Float64Array(R) }])));
+  tally = sig.map(m => new Map([...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => [e[0], { prob: 0, hw: new Float64Array(R), best: -1, bp: null }])));
   if (R > 0) modelPass();
   // assemble
   const stats = [];
@@ -115,7 +115,7 @@ function analyze(C, ph) {
     }
     const paths = [...tally[t].entries()].filter(e => e[1].prob > 0).sort((a, b) => b[1].prob - a[1].prob).map(([key, o]) => {
       const w = Math.floor(key / 1099511627776), am = Math.floor(key / 1048576) % 1048576, tm = key % 1048576, bits = m => { const a = []; for (let i = 0; i < n; i++) if (m & (1 << i)) a.push(i); return a; };
-      const g = []; for (let i = 0; i < R; i++) { const s = o.hw[i] / o.prob; if (s > 0.99999) g.push([i, 1]); else if (s < 0.00001) g.push([i, 0]); }
+      const g = []; for (let i = 0; i < R; i++) { const s = o.hw[i] / o.prob, pick = o.bp ? o.bp[i] : (s >= 0.5 ? 1 : 0), sh = pick ? s : 1 - s; g.push([i, pick, sh > 0.99999 ? 1 : +sh.toFixed(3)]); }
       return { w, above: bits(am), tied: bits(tm), prob: r4(o.prob), g };
     });
     stats.push({ p: r4(totP[t]), c, mp: r4(marP[t]), mc, dead: false, rec, paths, lev: Array.from({ length: R }, (_, g) => [r4(lev[(t * R + g) * 2] / (1 - ph[g])), r4(lev[(t * R + g) * 2 + 1] / ph[g])]) });
