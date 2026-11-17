@@ -2,9 +2,9 @@ name: Scheduled rebuild
 # Pushes a timestamp commit so Vercel redeploys and the build pulls fresh ESPN data.
 on:
   schedule:
-    - cron: "17 11 * 8-12,1 0"   # Sundays, after Saturday's games
-    - cron: "23 5 * 8-12,1 3"    # Wednesdays, after Tuesday night CFP rankings
-    - cron: "41 8 * 8-12,1 6"    # Saturdays, to pick up weeknight games
+    - cron: "17 11 * 8-12,1 *"   # every morning in season: picks up weeknight games and late or rescheduled finishes
+    - cron: "23 5 * 8-12,1 3"    # Wednesdays, right after Tuesday night CFP rankings
+    - cron: "47 19 * 8-12,1 0"   # Sunday afternoon: second pass for games that ended after the morning build
   workflow_dispatch:
 permissions:
   contents: write
