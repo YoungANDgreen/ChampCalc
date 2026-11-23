@@ -125,6 +125,8 @@
   }
   function drawPaths(i) {
     const d = D.stats[i], div = D.spots === 1 ? D.divNames[poolOf(i)] : null;
+    if (!D.rem.length) { E.apply(new Uint8Array(0)); const r = E.title(), inn = r.sel.includes(i);
+      $('paths').innerHTML = `<div class="empty" style="border-color:var(--${inn ? 'ok' : 'line'});color:var(--cream)">The ${D.name} regular season is complete, so there are no paths left to rank. ${r.und.length ? 'One spot is still waiting on a later tiebreaker.' : 'Title game: ' + r.sel.map(name).join(' vs ') + '.'}${inn ? ' ' + name(i) + ' is in.' : ''}</div>`; return; }
     $('paths').innerHTML = d.paths.length ? d.paths.map((p, k) => {
       const rec = recOf(i, p.w), ab = p.above.map(name), ti = p.tied.map(name), n = ti.length + 1; let h, sub;
       if (div) { if (!ti.length) { h = `Finish ${rec}, win the ${div} outright`; sub = 'No tiebreaker needed.'; } else { h = `Finish ${rec}, win a ${n}-way tiebreak for the ${div}`; sub = `Tied at the top of the division with ${list(ti)}.`; } }
